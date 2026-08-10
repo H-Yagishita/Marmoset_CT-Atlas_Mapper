@@ -1,0 +1,30 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest-tmp*/
+build/
+dist/
+*.spec
+outputs/
+
+# Large runtime/reference datasets are published separately as versioned archives.
+data/atlas/
+data/reference/
+data/transforms/
+
+# Local validation workspace scripts contain study-specific paths and are not public source.
+260807b_Create_MultiReferenceConsensusTransforms.py
+260807c_Evaluate_MultiReferenceConsensus_Grid1mm.py
+analyze_multiref_results.py
+ensemble_reference_check.m
+fre_grid_correlation_check.m
+m260807a_MultiReferenceEnsemble_RigidSimilarity.m
+m260807b_MultiReference_ErrorAnalysis.m
+
+# Generated development screenshots.
+app_main_preview.png
+app_qc_preview.png
+embedded_icon_preview.png
+feature_update_preview.png
+spacing_fix_preview.png

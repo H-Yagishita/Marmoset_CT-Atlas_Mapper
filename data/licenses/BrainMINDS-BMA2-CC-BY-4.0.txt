@@ -1,0 +1,8 @@
+Brain/MINDS 3D Digital Marmoset Brain Atlas Version 2.0
+https://doi.org/10.6084/m9.figshare.29992687
+
+Licensed under the Creative Commons Attribution 4.0 International License:
+https://creativecommons.org/licenses/by/4.0/
+
+Attribution must be retained, a link to the license must be provided, and any
+changes to the data must be identified.

@@ -1,0 +1,77 @@
+{
+  "shared": {
+    "atlas_space": "BMA 2.0 / Brain Space 3",
+    "registration_method": "Rigid",
+    "registration_labels": ["LM01", "LM02", "LM03", "LM04", "LM05", "LM06", "LM07", "LM08", "LM09", "LM10", "LM11", "LM12", "LM13"],
+    "atlas_reference": "data/atlas/BMA2.0_avg_invivo_T2WI.nii.gz",
+    "atlas_layers": {
+      "BMA 2.0 in vivo T2WI": {
+        "path": "data/atlas/BMA2.0_avg_invivo_T2WI.nii.gz",
+        "interpolation": "linear"
+      },
+      "BMA 2.0 ex vivo T2WI": {
+        "path": "data/atlas/BMA2.0_avg_exvivo_T2WI.nii.gz",
+        "interpolation": "linear"
+      },
+      "BMA 2.0 Nissl": {
+        "path": "data/atlas/BMA2.0_avg_nissl.nii.gz",
+        "interpolation": "linear"
+      },
+      "BMA 2.0 Myelin": {
+        "path": "data/atlas/BMA2.0_avg_myelin.nii.gz",
+        "interpolation": "linear"
+      },
+      "BMA 2.0 Regions": {
+        "path": "data/atlas/BMA2.0_regions_label.nii.gz",
+        "interpolation": "nearest"
+      }
+    },
+    "atlas_label_map": "data/atlas/BMA2.0_regions_label.nii.gz",
+    "atlas_color_table": "data/atlas/BMA2.0_regions_list.ctbl",
+    "license": "CC BY 4.0",
+    "source_url": "https://doi.org/10.6084/m9.figshare.29992687"
+  },
+  "qc_benchmark": {
+    "condition": "260805 CT-to-CT, Bottom_08, Rigid, 8 landmarks, 12 directed pairs",
+    "sample_count": 12,
+    "mean_rms_mm": 0.615606480993263,
+    "minimum_rms_mm": 0.462723337809842,
+    "maximum_rms_mm": 0.736546216817878,
+    "warning_threshold_mm": 0.736546216817878,
+    "source": "04_MappingEvaluation/CT_to_CT_LandmarkTransforms/All_CTtoCT_LandmarkTransforms_Summary.csv"
+  },
+  "references": [
+    {
+      "id": "bma2_hj0285f",
+      "display_name": "BMA 2.0 (HJ0285F reference)",
+      "reference_id": "HJ0285F",
+      "reference_ct": "data/reference/HJ0285F_CT.nii.gz",
+      "reference_landmarks": "data/reference/HJ0285F_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms/HJ0285F_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "bma2_hh0424m",
+      "display_name": "BMA 2.0 (HH0424M reference)",
+      "reference_id": "HH0424M",
+      "reference_ct": "data/reference/HH0424M_CT.nii",
+      "reference_landmarks": "data/reference/HH0424M_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms/HH0424M_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "bma2_j0476m",
+      "display_name": "BMA 2.0 (J0476M reference)",
+      "reference_id": "J0476M",
+      "reference_ct": "data/reference/J0476M_CT.nrrd",
+      "reference_landmarks": "data/reference/J0476M_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms/J0476M_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "bma2_j0477m",
+      "display_name": "BMA 2.0 (J0477M reference)",
+      "reference_id": "J0477M",
+      "reference_ct": "data/reference/J0477M_CT.nii",
+      "reference_landmarks": "data/reference/J0477M_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms/J0477M_CT_to_BMA2_PointTransform.h5"
+    }
+  ]
+}

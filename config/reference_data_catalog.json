@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "dataset_id": "bma2-k04-reference-library",
+  "display_name": "BMA 2.0 / K04 Marmoset CT Reference Library",
+  "version": "1.0.0",
+  "landing_page_url": "",
+  "license_summary": "BMA 2.0: CC BY 4.0. K04 reference-data redistribution permission must be confirmed before publication.",
+  "package": {
+    "filename": "MarmosetAtlasMapper_Data_v1.0.zip",
+    "sha256": "",
+    "size_bytes": null
+  },
+  "required_files": [
+    "data/atlas/BMA2.0_avg_invivo_T2WI.nii.gz",
+    "data/atlas/BMA2.0_avg_exvivo_T2WI.nii.gz",
+    "data/atlas/BMA2.0_avg_nissl.nii.gz",
+    "data/atlas/BMA2.0_avg_myelin.nii.gz",
+    "data/atlas/BMA2.0_regions_label.nii.gz",
+    "data/atlas/BMA2.0_regions_list.ctbl",
+    "data/reference/HH0424M_CT.nii",
+    "data/reference/HH0424M_Landmarks.mrk.json",
+    "data/reference/HJ0285F_CT.nii.gz",
+    "data/reference/HJ0285F_Landmarks.mrk.json",
+    "data/reference/J0476M_CT.nrrd",
+    "data/reference/J0476M_Landmarks.mrk.json",
+    "data/reference/J0477M_CT.nii",
+    "data/reference/J0477M_Landmarks.mrk.json",
+    "data/transforms/HH0424M_CT_to_BMA2_PointTransform.h5",
+    "data/transforms/HJ0285F_CT_to_BMA2_PointTransform.h5",
+    "data/transforms/J0476M_CT_to_BMA2_PointTransform.h5",
+    "data/transforms/J0477M_CT_to_BMA2_PointTransform.h5"
+  ],
+  "file_sha256": {
+    "data/transforms/HH0424M_CT_to_BMA2_PointTransform.h5": "3627408b1c27b4abeb46d0b2679f58a6b8d0541eb501f360c877137b745759df",
+    "data/transforms/HJ0285F_CT_to_BMA2_PointTransform.h5": "021fb9e3e4691cc9e585021499d1d4dd0371a053c5dd641354d08d105acdad2a",
+    "data/transforms/J0476M_CT_to_BMA2_PointTransform.h5": "b9e7b4f7137669058a919aefa5f1a55353631e1428de26a77a645509e86cb1bb",
+    "data/transforms/J0477M_CT_to_BMA2_PointTransform.h5": "23f86ac7c4fb65aa49afc1809459a42b9410ff7f74d126fc3d4bbb984de52f60"
+  }
+}

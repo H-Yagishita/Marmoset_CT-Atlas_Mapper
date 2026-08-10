@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "library_id": "bma2_marmoset_ct_k04",
+  "atlas": {
+    "id": "BMA2.0",
+    "space": "BMA 2.0 / Brain Space 3",
+    "reference_image": "data/atlas/BMA2.0_avg_invivo_T2WI.nii.gz",
+    "label_map": "data/atlas/BMA2.0_regions_label.nii.gz",
+    "color_table": "data/atlas/BMA2.0_regions_list.ctbl",
+    "layers": {
+      "BMA 2.0 in vivo T2WI": {"path": "data/atlas/BMA2.0_avg_invivo_T2WI.nii.gz", "interpolation": "linear"},
+      "BMA 2.0 ex vivo T2WI": {"path": "data/atlas/BMA2.0_avg_exvivo_T2WI.nii.gz", "interpolation": "linear"},
+      "BMA 2.0 Nissl": {"path": "data/atlas/BMA2.0_avg_nissl.nii.gz", "interpolation": "linear"},
+      "BMA 2.0 Myelin": {"path": "data/atlas/BMA2.0_avg_myelin.nii.gz", "interpolation": "linear"},
+      "BMA 2.0 Regions": {"path": "data/atlas/BMA2.0_regions_label.nii.gz", "interpolation": "nearest"}
+    },
+    "license": "CC BY 4.0",
+    "source_url": "https://doi.org/10.6084/m9.figshare.29992687"
+  },
+  "landmarks": {
+    "allowed_labels": ["LM01", "LM02", "LM03", "LM04", "LM05", "LM06", "LM07", "LM08", "LM09", "LM10", "LM11", "LM12", "LM13"],
+    "minimum_count": 3,
+    "recommended_count": 5
+  },
+  "consensus": {
+    "method": "equal_weight_arithmetic_mean",
+    "grid_spacing_mm": 0.5,
+    "grid_padding_mm": 1.0,
+    "qc_sample_count": 300,
+    "random_seed": 260807
+  },
+  "inverse": {
+    "method": "global_affine_initialized_newton",
+    "grid_spacing_mm": 0.5,
+    "grid_padding_mm": 1.0,
+    "maximum_iterations": 20,
+    "convergence_tolerance_mm": 0.05,
+    "maximum_step_mm": 5.0,
+    "minimum_roundtrip_sample_count": 30
+  },
+  "qc": {
+    "component_approximation_p95_max_mm": 0.05,
+    "consensus_approximation_p95_max_mm": 0.05,
+    "inverse_roundtrip_p95_max_mm": 0.25,
+    "fre_benchmark": {
+      "condition": "260805 CT-to-CT, Bottom_08, Rigid, 8 landmarks, 12 directed pairs",
+      "mean_rms_mm": 0.615606480993263,
+      "minimum_rms_mm": 0.462723337809842,
+      "maximum_rms_mm": 0.736546216817878
+    }
+  },
+  "references": [
+    {
+      "id": "HJ0285F",
+      "ct": "data/reference/HJ0285F_CT.nii.gz",
+      "landmarks": "data/reference/HJ0285F_Landmarks.mrk.json",
+      "ct_to_atlas_forward": "data/transforms/HJ0285F_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "HH0424M",
+      "ct": "data/reference/HH0424M_CT.nii",
+      "landmarks": "data/reference/HH0424M_Landmarks.mrk.json",
+      "ct_to_atlas_forward": "data/transforms/HH0424M_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "J0476M",
+      "ct": "data/reference/J0476M_CT.nrrd",
+      "landmarks": "data/reference/J0476M_Landmarks.mrk.json",
+      "ct_to_atlas_forward": "data/transforms/J0476M_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "J0477M",
+      "ct": "data/reference/J0477M_CT.nii",
+      "landmarks": "data/reference/J0477M_Landmarks.mrk.json",
+      "ct_to_atlas_forward": "data/transforms/J0477M_CT_to_BMA2_PointTransform.h5"
+    }
+  ]
+}
