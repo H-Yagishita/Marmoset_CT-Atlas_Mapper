@@ -1,8 +1,8 @@
 # Outputs and coordinate conventions
 
-Results are saved in the output folder selected at the start of a run. If that
-folder is not empty, the app creates a timestamped subfolder. Original CT images
-and landmark files are not overwritten.
+Results are saved in the output folder chosen when a run starts. If the folder
+is not empty, the app creates a timestamped subfolder. The original CT and
+landmark files are never overwritten.
 
 ## Main files
 
@@ -10,59 +10,58 @@ and landmark files are not overwritten.
 | --- | --- |
 | `Target_CT_to_BMA_MultiRef_Nref6_Forward.h5` | Target-to-atlas point transform |
 | `Target_CT_to_BMA_MultiRef_Nref6_Displacement.nrrd` | Mean forward displacement field |
-| `SingleReference/` | Six sampled target-to-atlas transforms, one per reference |
+| `SingleReference/` | The six target-to-atlas transforms, one per reference |
 | `TargetCT_in_Reference/` | Target CT resampled into each reference CT space, with coverage masks |
-| `UsedLandmarks/` | The landmark subset used for the target and each reference |
+| `UsedLandmarks/` | Landmarks used for the target and each reference |
 | `AtlasLayers_in_TargetCT/` | Atlas MRI, Nissl, myelin, and region labels in target CT space |
-| `TargetCT_in_BMA2.0.nii.gz` | Target CT in atlas space, saved only when inverse QC passes |
-| `Inverse/` | Inverse transform, displacement field, and convergence masks |
-| `MappedMarkups/` | Registration landmarks mapped to atlas space, as Markups JSON and CSV |
-| `QC/` | Landmark residuals, numerical QC tables, and overlay images |
-| `QC/Volumes/` | Volumes used to reopen the interactive quality-check views |
-| `Uncertainty/` | Measures of disagreement between the six reference mappings |
-| `Run_Manifest.json` and `Run_Manifest.csv` | Run settings, provenance, and output paths |
+| `TargetCT_in_BMA2.0.nii.gz` | Target CT in atlas space (saved only if the inverse check passes) |
+| `Inverse/` | Inverse transform, displacement field, and convergence mask |
+| `MappedMarkups/` | Landmarks mapped to atlas space, as Markups JSON and CSV |
+| `QC/` | Landmark residuals, numerical check tables, and overlay images |
+| `QC/Volumes/` | Volumes used to reopen the Quality Check views |
+| `Uncertainty/` | Disagreement among the six reference mappings |
+| `Run_Manifest.json`, `Run_Manifest.csv` | Run settings, provenance, and output paths |
 
 ANTs runs use the prefix `Target_CT_to_BMA_ANTs_MultiRef_Nref6` and also save
-per-reference commands, transforms, logs, and input hashes under `ANTs/`.
+the command, transforms, log, and input checksums for each reference under `ANTs/`.
 
-Keep the run folder intact when moving or sharing results. **Open results** uses
-the manifest and QC volumes to restore the target CT, landmarks, contrast,
-registration settings, and viewers without repeating the registration.
+Keep the run folder intact when moving or sharing it. **Open results** reads the
+manifest and the saved volumes to restore the target CT, landmarks, contrast,
+settings, and viewers without repeating the registration.
 
-## How the mappings are combined
+## How the six mappings are combined
 
-Each route maps a target CT point through a reference CT into BMA 2.0. The six
-complete routes are sampled on the same target-space grid, with 0.5 mm spacing
-and 1.0 mm padding. The forward displacement vectors are then averaged with
-equal weights. This is equivalent to averaging the six mapped positions at
-each grid point. It is not an average of image intensities or affine parameters.
+Each reference provides a route from a target CT point, through that reference's
+CT, into BMA 2.0. The six routes are sampled on the same target-space grid
+(0.5 mm spacing, 1.0 mm padding), and their forward displacement vectors are
+averaged with equal weights. This is equivalent to averaging the six mapped
+positions at each grid point; image intensities and affine parameters are not
+averaged.
 
-The grid is axis-aligned in RAS coordinates and is represented in ITK with the
+## Coordinates and interpolation
+
+The grid is axis-aligned in RAS coordinates and is stored in ITK with the
 equivalent LPS origin and direction. Calculations use physical LPS coordinates
-in millimetres. RAS Markups are converted on import; generated Markups and
+in millimetres. Imported RAS Markups are converted to LPS; generated Markups and
 coordinate CSV files use LPS. Displacement fields and continuous atlas images
-are sampled with linear interpolation; region labels use nearest-neighbour
-interpolation.
+are interpolated linearly, and region labels by nearest neighbour.
 
-## Numerical quality checks
+## Numerical checks
 
-Forward QC compares the sampled fields with the original transform routes.
-The configured 95th-percentile approximation-error limit is 0.05 mm.
+- **Forward check**: the sampled fields are compared with the original transform
+  routes. The 95th-percentile approximation error must be below 0.05 mm.
+- **Inverse check**: to resample the target CT into atlas space, the app solves
+  for the inverse mapping on an atlas-space grid (affine initialization followed
+  by Newton iterations) and records a convergence mask. The inverse is saved only
+  if the 95th-percentile round-trip error is below 0.25 mm with at least 30
+  valid samples. These limits are set in `config/reference_library.json`.
 
-To resample the target CT into atlas space, the app solves for the inverse
-mapping on an atlas-space grid. It uses an affine initialization followed by
-Newton iterations and records a convergence mask. The inverse is saved only
-when the round-trip error passes QC: its 95th percentile must be below 0.25 mm,
-with at least 30 valid overlap samples. These settings are recorded in
-`config/reference_library.json`.
+Atlas coverage is reported but does not prevent processing of partial CT scans.
+Areas outside the CT field of view are set to zero in the atlas-space CT. If the
+inverse check fails, the forward mapping and the atlas layers in target CT space
+are still saved, but the inverse transform and the atlas-space CT are not.
 
-Atlas coverage is reported separately. It does not prevent processing of
-partial CT scans. Areas outside the observed CT field of view remain zero in
-the atlas-space CT. If inverse QC fails, the forward mapping and atlas layers
-in target CT space remain available; the inverse transform and atlas-space CT
-are not saved.
-
-These checks assess numerical consistency, not anatomical correspondence.
-Fiducial registration error (FRE) measures residual landmark mismatch after
-registration. The uncertainty volumes measure disagreement between references.
-Neither is a direct measurement of the mapping error for a new target animal.
+These checks test numerical consistency, not anatomical correspondence. The
+landmark residual (fiducial registration error) measures the remaining landmark
+mismatch after registration, and the uncertainty volumes measure disagreement
+among references; neither directly measures the mapping error for a new animal.

@@ -1,0 +1,3 @@
+# Maintainer-only notes are kept in Git but omitted from source archives.
+/PUBLICATION_CHECKLIST.md export-ignore
+/docs/ZENODO_RELEASE.md export-ignore

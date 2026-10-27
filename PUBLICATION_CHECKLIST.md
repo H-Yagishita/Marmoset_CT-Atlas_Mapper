@@ -2,12 +2,14 @@
 
 ## Metadata and permissions
 
-- [x] Application and reference-data license: MIT, selected by Haruya Yagishita.
+- [x] Application code and documentation: MIT. Reference data: CC BY 4.0.
 - [x] Software copyright: Copyright (c) 2026 Haruya Yagishita.
 - [x] BMA 2.0 attribution and CC BY 4.0 license retained.
-- [ ] Confirm institutional and third-party redistribution requirements.
+- [x] Reference-data redistribution permission confirmed by Haruya Yagishita.
+- [x] Reference-data rights holders: Haruya Yagishita, Yuji Nagai, Yuki Hori, Takafumi Minamimoto, and Yoshikazu Isomura.
 - [ ] Confirm the final creator list, affiliations, and optional ORCIDs.
-- [ ] Add the version DOI and any available manuscript citation.
+- [x] Reserved version DOI: 10.5281/zenodo.23683937.
+- [ ] Add the publication date and manuscript citation when available.
 
 ## Package checks
 
@@ -22,7 +24,7 @@
 
 ## Deposit
 
-- [ ] Save a Zenodo draft for version 1.00 and reserve its DOI.
+- [x] Version DOI reserved by the author for the Zenodo draft.
 - [ ] Upload the complete ZIP, file manifest, checksums, and verification report.
 - [ ] Verify the uploaded size and checksum.
 - [ ] Cite the version DOI in the manuscript.

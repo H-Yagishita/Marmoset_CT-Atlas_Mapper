@@ -17,7 +17,8 @@ that GitHub integration includes manually attached release assets.
    controls, saved results, and the bundled ANTs runtime. Test installation on
    a clean Windows computer without Python, Slicer, or ANTs.
 5. Confirm contributor details and any institutional or third-party requirements
-   for distributing the reference data. Preserve the MIT, BMA CC BY 4.0, and
+   for distributing the reference data. Preserve the software MIT notice,
+   separate CC BY 4.0 notices for the reference library and BMA 2.0, and
    dependency notices. Review Qt/PySide6 source and library-replacement obligations.
 6. Save the verification results beside the archive. Do not include private
    paths, credentials, unpublished analysis outputs, or development logs.
@@ -28,8 +29,9 @@ that GitHub integration includes manually attached release assets.
 2. Confirm the title, creators, description, keywords, and related identifiers.
    `CITATION.cff` describes the software author; add other package contributors
    where appropriate.
-3. Reserve the version DOI if the record does not already have one. A reserved
-   DOI is not registered until the record is published.
+3. The DOI reserved for version 1.00 is `10.5281/zenodo.23683937`. Use the existing
+   draft rather than reserving another DOI. A reserved DOI is not registered
+   until the record is published.
 4. Add the DOI to the final citation. If any file inside the ZIP changes,
    rebuild the package and regenerate its checksums.
 5. Upload the ZIP, file manifest, checksums, and verification report. Check the

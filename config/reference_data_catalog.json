@@ -3,8 +3,8 @@
   "dataset_id": "bma2-manuscript-nref6-reference-library",
   "display_name": "BMA 2.0 atlas and six-marmoset reference library",
   "version": "2.0.0",
-  "landing_page_url": "",
-  "license_summary": "Reference images, landmarks, and transforms: MIT. BMA 2.0 atlas: CC BY 4.0. See data/README.md for attribution and license details.",
+  "landing_page_url": "https://doi.org/10.5281/zenodo.23683937",
+  "license_summary": "Reference images, landmarks, and transforms: CC BY 4.0. BMA 2.0 atlas: CC BY 4.0, with separate attribution. Application code: MIT. See data/README.md for details.",
   "package": {
     "filename": "MarmosetAtlasMapper_v1.00_Windows_Complete.zip",
     "sha256": "",
