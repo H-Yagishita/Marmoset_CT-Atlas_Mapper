@@ -35,10 +35,10 @@ when running from source or testing a separate installation.
   J0476M, and J0477M.
 - Six `*_PointTransform.h5` transforms mapping reference CT points into BMA 2.0.
 
-The reference library uses the images and landmarks from the manuscript's
-260918 analysis. Its CT-to-MRI and MRI-to-atlas transforms originate from the
-260911 analysis. Exploratory landmark-optimization variants are not included.
-The installed package has no dependency on those analysis folders.
+The library contains the reference images and landmarks used in the manuscript.
+Each point-forward transform combines the reference's within-subject CT-to-MRI
+and MRI-to-atlas mappings. The package is self-contained and does not require
+the original analysis folders.
 
 `data/reference_v2/PROVENANCE.json` records input hashes and coordinate checks.
 The point-forward transforms were checked against the manuscript's direct
@@ -64,5 +64,4 @@ caches the large HDF5 files under
 `%LOCALAPPDATA%\MarmosetAtlasMapper\transform_cache`. Images remain in the selected
 data folder. This avoids HDF5 read failures seen on some external and mapped drives.
 
-The older `*_Atlas_ANTs.h5` files, analysis outputs, and local caches are not part
-of the release. Maintainer instructions are in [ZENODO_RELEASE.md](ZENODO_RELEASE.md).
+Maintainer instructions are in [ZENODO_RELEASE.md](ZENODO_RELEASE.md).

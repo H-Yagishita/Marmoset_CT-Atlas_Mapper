@@ -32,6 +32,5 @@ HH0428M, HJ0285F, J0476M, and J0477M. `transforms_v2/` contains their
 CT-to-atlas point-forward transforms. File provenance and transform checks are
 recorded in `reference_v2/PROVENANCE.json`.
 
-These are the reference images and landmarks used in the manuscript analysis,
-not landmark configurations selected by the earlier optimization experiments.
+These are the reference images and landmarks used in the manuscript analysis.
 The library version is **2.0.0**, independent of the application version **1.00**.

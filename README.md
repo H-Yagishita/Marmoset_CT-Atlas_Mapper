@@ -5,7 +5,7 @@ Brain Atlas 2.0 (BMA 2.0), without requiring an MRI of that animal. It registers
 the target CT to six reference marmosets and averages the six mappings into
 atlas space.
 
-Version **1.00** is a standalone Windows application. The complete package
+Version **1.00** is the first public release. The standalone Windows package
 includes the executable, source code, atlas, reference images, landmarks, and
 transforms. Python, 3D Slicer, and SlicerANTs do not need to be installed.
 
@@ -16,7 +16,6 @@ License.
 ## Getting started
 
 1. Extract `MarmosetAtlasMapper_v1.00_Windows_Complete.zip` into a new folder.
-   Do not merge it with an older installation.
 2. Open `MarmosetAtlasMapper.exe`. Keep the `_internal` and `data` folders beside it.
 3. Click **Load CT** and select a NIfTI or NRRD image (`.nii`, `.nii.gz`, `.nrrd`,
    or `.nhdr`). For detached NRRD files, keep the header and data file together.
@@ -124,12 +123,7 @@ version and its version-specific archive DOI. Citation metadata are provided in
 `CITATION.cff`; the archive record supplies the DOI. Please also cite BMA 2.0.
 The software citation request does not add a condition to the MIT License.
 
-## Updates and support
-
-Install each update in a separate folder and retain earlier results. Saved
-landmark-based results from the four- and six-reference versions remain readable
-if they include the reloadable QC files. Results from the retired BRAINSFit
-backend must be opened with the version that created them.
+## Support
 
 Report problems through the repository's issue tracker. Include the app version,
 Windows version, error message, and steps needed to reproduce the problem.

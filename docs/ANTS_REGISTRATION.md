@@ -46,10 +46,8 @@ The settings in `config/ants_registration.json` are:
 | Threads per job | 4 |
 
 These intensity-registration settings match those used in the manuscript.
-The app uses landmark initialization rather than the manually saved initial
-transforms used in that analysis. The standalone ANTs build also differs from
-the earlier SlicerANTs build. Results may therefore differ numerically.
-Previously saved results are not recalculated.
+The app initializes ANTs from landmarks; the manuscript analysis used manually
+prepared initial transforms. Each run records its parameters and ANTs version.
 
 Window and level settings affect display only. No intensity normalization is
 added by the app.
@@ -94,7 +92,7 @@ without the app's private Qt DLL directory in its search path.
 
 For development, `MARM_ATLAS_ANTS` may specify an absolute path to a standalone
 `antsRegistration.exe`. A broken override produces an error; the app does not
-silently choose a different executable or fall back to Slicer.
+silently choose a different executable.
 
 ## Testing
 

@@ -15,7 +15,7 @@
 - [ ] Pass unit tests and Windows CI.
 - [ ] Verify every archived file and the 31 required data files against their hashes.
 - [ ] Test the extracted executable: startup, Japanese-path I/O, GUI, and ANTs.
-- [ ] Test saved-result compatibility and registration-mode labels.
+- [ ] Save a run and reopen its images, landmarks, and viewer settings.
 - [ ] Check the exact dependency inventory, license texts, source archives, and replacement instructions.
 - [ ] Test on a clean Windows PC without Python, 3D Slicer, or ANTs installed.
 - [ ] Review packaged provenance and logs for information that should not be public.
