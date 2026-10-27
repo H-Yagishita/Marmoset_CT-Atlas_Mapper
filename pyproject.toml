@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marmoset-atlas-mapper"
-version = "0.3.1"
+version = "0.3.2"
 description = "Landmark-based mapping between marmoset CT and the Brain/MINDS BMA 2.0 atlas"
 requires-python = ">=3.11"
 license = "MIT"

@@ -1,14 +1,26 @@
 # Marmoset Atlas Mapper
 
 A standalone Windows desktop application for landmark-based mapping between a
-user marmoset CT and the Brain/MINDS BMA 2.0 atlas. Version 0.3.1 uses a six-reference
+user marmoset CT and the Brain/MINDS BMA 2.0 atlas. Version 0.3.2 uses a six-reference
 library (Nref=6): HH0312F, HH0424M, HH0428M, HJ0285F, J0476M, and J0477M.
 
 This software was developed for research and has not been validated for
 diagnostic or clinical use. This statement describes its intended use and
 validation status; it does not add restrictions to the software license.
 
-## 0.3.1 standalone ANTs update
+## 0.3.2 Unicode-path fix and complete-package preparation
+
+Japanese/non-ASCII image and transform paths now use an ASCII temporary copy
+that preserves the original file extension. Windows 8.3 file aliases are not
+used, because they may truncate `.nii.gz` to `.GZ` and `.nrrd` to `.NRR`.
+Voxel values, physical geometry, registration parameters, and existing results
+are unchanged. Regression tests cover hosts both with and without short names.
+
+A complete Windows ZIP, containing the application, corresponding source,
+BMA 2.0 and the six-reference library, is being prepared for Zenodo. It has not
+been published and no DOI has been assigned. See [Zenodo preparation](docs/ZENODO_RELEASE.md).
+
+## Standalone ANTs (introduced in 0.3.1)
 
 The Windows distribution now includes ANTs 2.6.5. Neither 3D Slicer nor
 SlicerANTs is required. Registration parameters and six-reference consensus
@@ -121,16 +133,18 @@ registration, prepare the native runtime as described in
 [ANTs registration](docs/ANTS_REGISTRATION.md#building-the-standalone-runtime);
 installing the Python requirements alone does not install ANTs.
 
-On first launch, the application checks for the version pinned in
-`config/reference_data_catalog.json`. The reference-data package is being prepared
-for release; no public download URL is available yet. Once the separate data
-deposit is published, installation will be:
+On first launch, the application checks the library pinned in
+`config/reference_data_catalog.json`. The complete Windows package is being
+prepared for Zenodo; no public download URL or DOI is available yet.
+For that package, extract `MarmosetAtlasMapper_v0.3.2_Windows_Complete.zip`
+into a new folder and run `MarmosetAtlasMapper.exe`. All required data and
+the native ANTs runtime are included; no split archives need to be merged.
+Do not mix its `_internal` directory with an older release.
 
-1. Download `MarmosetAtlasMapper_Data_v2.0.zip`.
-2. Extract the ZIP; its top-level content is a folder named `data`.
-3. Copy the extracted `data` folder directly beside `MarmosetAtlasMapper.exe`
-   (or into the repository root when running from source).
-4. Click `Check again` in the application, or restart it.
+When running from source, install the Python dependencies and supply the same
+data library: copy the complete package's `data` directory into the source root,
+or select the complete application folder in the data-location dialog. ANTs
+must also be prepared separately or selected with `MARM_ATLAS_ANTS` as below.
 
 The final layout must be:
 
@@ -150,8 +164,10 @@ large HDF5 transforms are checksum-verified and cached locally before
 SimpleITK opens them. This avoids HDF5 access violations seen on some external
 or mapped drives; CT/MRI images themselves remain in the selected library.
 
-The Zenodo landing-page URL and package checksum remain blank until
-redistribution permission and the permanent data deposit are complete.
+The Zenodo landing-page URL remains blank until a real record is created.
+Package checksums are distributed alongside the complete ZIP; an archive cannot
+contain its own final checksum. Public distribution still requires the data
+permissions and third-party license checks below.
 
 ## Build the portable application
 
@@ -165,7 +181,7 @@ before building.
 
 The portable application is created at
 `dist\MarmosetAtlasMapper\MarmosetAtlasMapper.exe`. The command above retains a
-local data-bundled development build. For the public, compact distribution use:
+local data-bundled development build. For a data-free development build use:
 
 ```powershell
 .\build_exe.ps1 -SkipData
@@ -264,7 +280,8 @@ Distribution approval for the six reference CT/MRI datasets, landmarks, and deri
 transforms is pending confirmation by the data owners; do not publish
 `data/reference_v2` or `data/transforms_v2` until approval is recorded.
 
-The large runtime datasets are ignored by Git and must be published as separate
-versioned data assets. Before making this repository public, complete
+The large runtime datasets are ignored by Git. They will be archived with the
+application and source in the complete Zenodo package, under their respective
+licenses; they are not covered by the software's MIT License. Before publication, complete
 `PUBLICATION_CHECKLIST.md`, including data permissions, dependency-license
 compliance, archive DOI/URLs/checksums, and `CITATION.cff`.

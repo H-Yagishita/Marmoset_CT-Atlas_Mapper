@@ -154,6 +154,9 @@ def gui_smoke_test(report_path: str) -> int:
 
 
 if __name__ == "__main__":
+    if "--io-smoke-test" in sys.argv:
+        from marmoset_atlas_mapper.io_audit import audit
+        raise SystemExit(audit(sys.argv[sys.argv.index("--io-smoke-test") + 1]))
     if "--workflow-audit" in sys.argv:
         from marmoset_atlas_mapper.application_audit import workflow_audit
         index = sys.argv.index("--workflow-audit")

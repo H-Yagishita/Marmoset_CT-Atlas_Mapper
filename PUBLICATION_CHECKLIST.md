@@ -15,11 +15,12 @@
 
 ## Data release
 
-- [ ] Build the single `MarmosetAtlasMapper_Data_v2.0.zip` archive using
-  `tools/build_reference_data_packages.py`.
+- [ ] Build and validate `MarmosetAtlasMapper_v0.3.2_Windows_Complete.zip`
+  containing executable, source and reference/atlas data.
 - [ ] Deposit the archive in a permanent DOI repository.
-- [ ] Add its byte size, SHA-256 value, and Zenodo landing-page DOI to
-  `config/reference_data_catalog.json`.
+- [ ] Record ZIP size and SHA-256 in the external package manifest; add the
+  real version DOI to the citation/README/catalog. Do not embed a ZIP's checksum
+  inside that same ZIP.
 - [ ] Preserve BMA 2.0 attribution and CC BY 4.0 license text in the data
   deposit.
 
@@ -33,7 +34,7 @@
   versions; local scripts with absolute study paths are ignored by Git.
 - [ ] Run tests and smoke test on a clean Windows machine.
 - [ ] Test the bundled ANTs runtime on a machine without 3D Slicer/SlicerANTs.
-- [ ] Create a data-free executable using `build_exe.ps1 -SkipData` and verify
-  the documented manual extraction, `data`-folder placement, and `Check again` flow.
-- [ ] Tag the software release and archive the exact tag in Zenodo for a
-  software DOI.
+- [ ] Rebuild the executable and verify the complete ZIP after extraction,
+  including Japanese-path I/O, Qt startup and standalone ANTs.
+- [ ] Cite the exact complete-package version DOI in the manuscript; keep its
+  source commit and file hashes in the manifest. Publish only with author approval.

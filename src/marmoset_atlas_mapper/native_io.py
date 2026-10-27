@@ -46,11 +46,11 @@ def native_input_path(path):
     if not needs_staging(source):
         yield source
         return
-    short = _short_path(source)
+    # Do not pass a file's Windows 8.3 alias to ITK. For example, .nii.gz
+    # becomes .GZ and .nrrd becomes .NRR; automatic ImageIO selection then
+    # fails on hosts where short names are enabled. Stage with the original
+    # suffix instead. A short *directory* path remains safe for TEMP above.
     # Detached NRRD headers may themselves contain a Unicode payload name.
-    if short and source.suffix.lower() != '.nhdr':
-        yield Path(short)
-        return
     with ascii_temporary_directory() as temp:
         staged = temp / ('input' + _suffix(source))
         if source.suffix.lower() == '.nhdr':
