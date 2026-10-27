@@ -10,7 +10,11 @@ Legal code: https://creativecommons.org/licenses/by/4.0/legalcode.en
 When sharing or adapting these data, credit the named contributors, retain
 this notice, provide links to the dataset and license, and indicate any changes.
 Dataset DOI: https://doi.org/10.5281/zenodo.23683937
-(reserved until publication)
 
-Please also cite the related publication once it is available.
-The Creative Commons legal code defines the license terms.
+Associated publication (please also cite):
+Yagishita H, Kawabata M, Nagai Y, Hori Y, Hirayama Y, Ebina T, Sehara K,
+Oyama K, Matsuzaki M, Minamimoto T, Isomura Y. A CT-to-atlas mapping
+framework using skull-base landmarks in marmosets. bioRxiv (2026).
+https://doi.org/10.1101/TODO_BIORXIV_DOI
+
+The license terms are defined by the legal code linked above.

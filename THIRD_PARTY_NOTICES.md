@@ -1,9 +1,10 @@
 # Third-party notices
 
-The Marmoset Atlas Mapper code is under the MIT License, and the six-reference
-data are under CC BY 4.0 (see [data/README.md](data/README.md)). The bundled atlas
-and third-party software retain their own licenses. This document lists the
-components; the license texts define their terms.
+The Marmoset Atlas Mapper code is licensed under the MIT License, and the
+reference data are licensed under CC BY 4.0 (see
+[data/README.md](data/README.md)). The bundled atlas and third-party software
+retain their own licenses. This document lists these components; their license
+texts define the terms.
 
 | Component | Version | License |
 | --- | --- | --- |
@@ -28,21 +29,21 @@ includes the Qt Core, GUI, Widgets, Network, OpenGL, and SVG modules with their
 plugins; the Qt Virtual Keyboard, PDF, QML, and Quick modules are not included.
 
 You may modify or replace the LGPL-licensed libraries and debug the application
-with your replacements; the application adds no restriction to these rights.
+with your replacements; the application imposes no restrictions on these rights.
 [docs/QT_RUNTIME.md](docs/QT_RUNTIME.md) describes the matching source archives
 and how to replace the libraries.
 
 ## ANTs
 
-The bundled `antsRegistration.exe` is the unmodified executable from the
-[official ANTs 2.6.5 release](https://github.com/ANTsX/ANTs/releases/tag/v2.6.5).
+The bundled `antsRegistration.exe` is the unmodified executable from the [official
+ANTs 2.6.5 release](https://github.com/ANTsX/ANTs/releases/tag/v2.6.5).
 `_internal/ants/Runtime.json` records its source and checksums, and the ANTs and
-ITK notices are in `_internal/ants/licenses/`. A notice for an optional ITK
-component does not mean that the component is used. 3D Slicer and SlicerANTs
-are neither required nor bundled.
+ITK notices are in `_internal/ants/licenses/`. The presence of a notice for an
+optional ITK component does not imply that the component is used. 3D Slicer and
+SlicerANTs are neither required nor bundled.
 
 ## Other components
 
-Microsoft Visual C++ runtime components remain under Microsoft's terms. Windows
-system DLLs are not included. Dependencies may contain code from other projects;
-keep their notices when redistributing the package.
+Microsoft Visual C++ runtime components remain subject to Microsoft's license
+terms. Windows system DLLs are not included. Dependencies may contain code from
+other projects; retain their notices when redistributing the package.

@@ -1,10 +1,9 @@
 # Package contents
 
-The complete Windows package is prepared as a single file,
-`MarmosetAtlasMapper_v1.00_Windows_Complete.zip` (about 4.0 GB compressed;
-allow about 4.5 GB after extraction). Its reserved Zenodo DOI is
-https://doi.org/10.5281/zenodo.23683937. The record will become accessible on
-publication. No separate data download is needed.
+The complete Windows package is distributed on Zenodo
+(https://doi.org/10.5281/zenodo.23683937) as a single file,
+`MarmosetAtlasMapper_v1.00_Windows_Complete.zip` (about 4.0 GB; allow about 4.5 GB
+after extraction). No separate data download is needed.
 
 ```text
 MarmosetAtlasMapper/
@@ -31,25 +30,26 @@ MarmosetAtlasMapper/
 ```
 
 Keep `data/` next to the executable and do not rename its subfolders; the app
-checks at startup that the required files are present. When running from source
-or testing another installation, `MARM_ATLAS_RESOURCE_ROOT` can point to a
-folder that contains `data/`.
+checks at startup that the required files are present. When running from source or
+testing another installation, `MARM_ATLAS_RESOURCE_ROOT` can point to a folder
+that contains `data/`.
 
 ## Data
 
-- BMA 2.0: in vivo and ex vivo T2-weighted MRI, Nissl, myelin, region labels,
-  and the region color table.
-- CT and MR images and landmarks LM01–LM13 of HH0312F, HH0424M, HH0428M,
-  HJ0285F, J0476M, and J0477M.
-- Six `*_PointTransform.h5` files that map reference CT points into BMA 2.0.
-  Each combines the reference's CT-to-MRI and MRI-to-atlas registrations.
+- BMA 2.0: in vivo and ex vivo T2-weighted MRI, Nissl, myelin, region labels, and
+  the region color table.
+- CT and MR images and landmarks LM01–LM13 of HH0312F, HH0424M, HH0428M, HJ0285F,
+  J0476M, and J0477M.
+- Six `*_PointTransform.h5` files that map reference CT points into BMA 2.0. Each
+  combines the reference's CT-to-MRI and MRI-to-atlas registrations.
 
-These are the reference images and landmarks used in the related publication.
+These are the reference images and landmarks used in the associated publication.
 `data/reference_v2/PROVENANCE.json` records the input checksums and transform
 checks. Each transform was compared with the original mapping route used in the
-publication: the 95th-percentile coordinate difference was below 0.01 mm and
-the maximum round-trip error below 0.0014 mm for every reference. These values
-confirm the transform conversion; they are not estimates of anatomical accuracy.
+publication: the 95th-percentile coordinate difference was below 0.01 mm and the
+maximum round-trip error was below 0.0014 mm for every reference. These values
+verify the conversion of the transforms; they are not estimates of anatomical
+accuracy.
 
 See [data/README.md](../data/README.md) and
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for licenses.
@@ -58,16 +58,16 @@ See [data/README.md](../data/README.md) and
 
 `FILE_MANIFEST.json` lists every file in the ZIP with its SHA-256 checksum, and
 `SHA256SUMS.txt` gives the checksums of the ZIP and the accompanying files. Both
-are supplied alongside the ZIP. `RELEASE_BUILD.json` in the package records the
-source commit and the reserved version DOI.
+files are provided alongside the ZIP on Zenodo. `RELEASE_BUILD.json` in the
+package records the source commit and the version DOI.
 
-The GitHub repository contains the code and configuration but not the large
-image and transform files, which are included in the complete package prepared for Zenodo.
+The GitHub repository contains the code and configuration but not the large image
+and transform files, which are distributed only in the complete package on Zenodo.
 
 ## Transform cache
 
 When the data are on a different drive from the Windows user folder, the app
 verifies the large HDF5 transforms and caches them in
 `%LOCALAPPDATA%\MarmosetAtlasMapper\transform_cache`, because HDF5 files on some
-external or network drives cannot be read reliably. Images are read from the
-data folder.
+external or network drives cannot be read reliably. Images are read from the data
+folder without caching.

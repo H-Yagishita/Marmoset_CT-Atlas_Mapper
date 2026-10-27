@@ -34,6 +34,14 @@ that GitHub integration includes manually attached release assets.
    until the record is published.
 4. Add the DOI to the final citation. If any file inside the ZIP changes,
    rebuild the package and regenerate its checksums.
+   For this release, wait for the bioRxiv DOI before rebuilding the complete
+   package. Replace its placeholder in README.md, CITATION.cff, data/README.md,
+   data/licenses/ReferenceLibrary-CC-BY-4.0.txt, and the local Zenodo metadata.
+   Run `tools/check_publication_metadata.py --preparation-dir <release-folder>`;
+   the check must pass before building. It checks agreement and DOI syntax,
+   not whether the DOI resolves online. Do not mark a reserved DOI as registered.
+   Public build records omit DOI registration status; the local deposit metadata
+   retains the actual status until publication.
 5. Upload the ZIP, file manifest, checksums, and verification report. Check the
    uploaded size and checksum against the local files.
 6. Review the draft and publish only after the author approves it. A release

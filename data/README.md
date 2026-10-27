@@ -1,7 +1,7 @@
 # Data sources and licenses
 
-The complete package contains two datasets: the BMA 2.0 atlas and a library of
-six reference marmosets. Both are licensed under CC BY 4.0, but they have
+The complete package contains two datasets: the BMA 2.0 atlas and a reference
+library of six marmosets. Both are licensed under CC BY 4.0, but they have
 different sources and must be credited separately.
 
 ## Brain/MINDS Marmoset Brain Atlas 2.0 (`atlas/`)
@@ -13,13 +13,13 @@ Source:
 > Paper: https://doi.org/10.1038/s41597-026-06601-z
 > Dataset: https://doi.org/10.6084/m9.figshare.29992687
 
-BMA 2.0 is licensed under
-[Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
-(CC BY 4.0); see `licenses/BrainMINDS-BMA2-CC-BY-4.0.txt`. The files keep their
-original names. The app resamples them for display and uses the region labels to
-identify mapped locations. When sharing outputs resampled from the atlas,
-credit BMA 2.0 and state that the data were resampled. Use of the
-atlas does not imply endorsement by its creators or RIKEN.
+BMA 2.0 is licensed under [Creative Commons Attribution 4.0
+International](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0); see
+`licenses/BrainMINDS-BMA2-CC-BY-4.0.txt`. The files retain their original names.
+The app resamples them for display and uses the region labels to identify mapped
+locations. When sharing outputs resampled from the atlas, credit BMA 2.0 and state
+that the data were resampled. Use of the atlas does not imply endorsement by its
+creators or RIKEN.
 
 ## Six-marmoset reference library (`reference_v2/`, `transforms_v2/`)
 
@@ -29,12 +29,15 @@ atlas does not imply endorsement by its creators or RIKEN.
   CT-to-MRI and MRI-to-atlas registrations.
 - `reference_v2/PROVENANCE.json`: input checksums and transform checks.
 
-These are the reference images and landmarks used in the related publication,
-which describes their acquisition and processing. The library is licensed under
-[Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
-(CC BY 4.0); see `licenses/ReferenceLibrary-CC-BY-4.0.txt`. When reusing these
-data, credit Haruya Yagishita, Yuji Nagai, Yuki Hori, Takafumi Minamimoto, and
-Yoshikazu Isomura; link to the dataset and license; and indicate any changes.
-The dataset DOI is https://doi.org/10.5281/zenodo.23683937 (reserved until
-publication). Please also cite the related publication once it is available.
+These are the reference images and landmarks used in Yagishita et al. (2026;
+https://doi.org/10.1101/TODO_BIORXIV_DOI), which describes their acquisition and
+processing. The library is licensed under
+[Creative Commons Attribution 4.0
+International](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0); see
+`licenses/ReferenceLibrary-CC-BY-4.0.txt`. When reusing these data, credit the
+contributors (Haruya Yagishita, Yuji Nagai, Yuki Hori, Takafumi Minamimoto, and
+Yoshikazu Isomura), cite the dataset (https://doi.org/10.5281/zenodo.23683937),
+link to the license, and indicate any changes. Please also cite Yagishita et al.
+(2026).
+
 The library version is **2.0.0**, independent of the application version (1.00).

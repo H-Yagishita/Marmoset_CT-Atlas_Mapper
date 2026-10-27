@@ -6,22 +6,22 @@ reference CTs and averages the six complete mappings into BMA 2.0.
 
 The Windows package includes ANTs 2.6.5; 3D Slicer and SlicerANTs are not used.
 Keep `_internal/ants` with the rest of the application. The Microsoft Visual C++
-x64 runtime must be installed; the app does not install it.
+Redistributable (x64) must be installed; the app does not install it.
 
 ## Steps
 
-1. A rigid transform is fitted from the target landmarks to each reference CT,
-   using the same landmark labels for all references.
+1. A rigid transform is estimated from the target landmarks to the corresponding
+   landmarks of each reference, using the same landmark labels for all references.
 2. ANTs registers the CT images in their original geometry, without a bone mask.
    **Rigid** uses one rigid stage (6 degrees of freedom); **Similarity** adds a
    similarity stage (7 degrees of freedom, including uniform scale).
 3. The ANTs composite transform, which includes the landmark initialization, is
    inverted to obtain the target-to-reference point transform.
 4. Each route is combined with the reference's CT-to-atlas transform. The six
-   routes are sampled on the same target-space grid and their displacement
-   vectors are averaged.
-5. Transforms, mapped images, landmarks, and check reports are saved. If any
-   route fails, the run stops instead of averaging fewer references.
+   routes are sampled on the same target-space grid and their displacement vectors
+   are averaged.
+5. Transforms, mapped images, landmarks, and check reports are saved. If any route
+   fails, the run stops instead of averaging fewer references.
 
 ANTs resampling uses fixed-to-moving transforms, whereas the saved point
 transforms map target to reference. See [OUTPUTS.md](OUTPUTS.md) for coordinate
@@ -45,34 +45,35 @@ Set in `config/ants_registration.json`:
 | Random seed | 20260918 |
 | Threads per job | 4 |
 
-These are the intensity-based registration settings used in the related
+These are the intensity-based registration settings used in the associated
 publication. The initialization differs: the app initializes ANTs from the
-landmarks, whereas the publication used manual initial alignment. No intensity
-normalization is added, and the display contrast does not affect registration.
+landmarks, whereas the publication used manual initial alignment. No additional
+intensity normalization is applied, and the display contrast does not affect
+registration.
 
 ## Logs and checks
 
 The folders `ANTs/Reference_01` to `Reference_06` each contain the initial
 transform, the ANTs command and console log, the composite and final point
 transforms, and `Registration.json`, which records the parameters, software
-version, input checksums, coordinate conventions, and final matrices. The main
-manifest states which reference each folder corresponds to.
+version, input checksums, coordinate conventions, and final matrices. The run
+manifest identifies the reference corresponding to each folder.
 
 The app checks that each transform is finite, has a positive determinant, and
-matches the requested model, and that the forward and inverse transforms and
-the saved H5 files agree. An ITK exception counts as a failure even if ANTs
-exits with code zero. Diagnostics are kept after a failed run.
+matches the requested model, and that the forward and inverse transforms and the
+saved H5 files agree. An ITK exception is treated as a failure even if ANTs exits
+with code zero. Diagnostics are kept after a failed run.
 
-CT images are copied to a temporary folder without resampling; the originals
-are not modified. Paths containing Japanese characters are supported. If ANTs
-cannot use the Windows temporary folder, set `MARM_ATLAS_STATE_ROOT` to a
-writable folder whose path contains only ASCII characters.
+CT images are copied to a temporary folder without resampling; the originals are
+not modified. Paths containing Japanese characters are supported. If ANTs cannot
+use the Windows temporary folder, set `MARM_ATLAS_STATE_ROOT` to a writable folder
+whose path contains only ASCII characters.
 
 ## Building the standalone runtime
 
 This is needed only when building the app from source. Download
-`ants-2.6.5-windows-2022-X64-VS2019.zip` from the
-[official ANTs release](https://github.com/ANTsX/ANTs/releases/tag/v2.6.5), then run:
+`ants-2.6.5-windows-2022-X64-VS2019.zip` from the [official ANTs
+release](https://github.com/ANTsX/ANTs/releases/tag/v2.6.5), then run:
 
 ```powershell
 .\.venv\Scripts\python.exe tools\prepare_standalone_ants.py <downloaded-zip>
@@ -82,12 +83,12 @@ This is needed only when building the app from source. Download
 The tool checks the archive's SHA-256
 (`2cfb09f9bfd796720819054711f493abd750dd3245875caaa5d04000d3a98c3d`), copies the
 executable and its runtime files, checks their dependencies, and downloads the
-license notices from fixed upstream revisions. Network access occurs only during
-this preparation, never when the app runs.
+license notices from fixed upstream revisions. Network access is required only for
+this preparation, not when the app runs.
 
 `Runtime.json` records the checksums of the runtime and license files; both the
-build and the app verify them. ANTs runs as a separate process, without the
-app's Qt DLL folder in its search path.
+build and the app verify them. ANTs runs as a separate process, without the app's
+Qt DLL folder in its search path.
 
 During development, `MARM_ATLAS_ANTS` can point to a standalone
 `antsRegistration.exe`. If that path is invalid, the app reports an error rather
@@ -96,7 +97,7 @@ than using another executable.
 ## Testing
 
 `MarmosetAtlasMapper.exe --ants-smoke-test REPORT.json` runs rigid and similarity
-registration on a synthetic image with known rotation, translation, and scale.
-The unit tests also cover transform direction, reference averaging, and loading
-of saved results. These tests check the software, not anatomical accuracy;
-inspect the alignment for every new target.
+registration on a synthetic image with known rotation, translation, and scale. The
+unit tests also cover transform direction, reference averaging, and loading of
+saved results. These tests check the software, not anatomical accuracy; inspect
+the alignment for every new target.

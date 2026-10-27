@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite the version you used and its version-specific DOI."
+message: "If you use this software, please cite this version using its DOI, together with the associated publication listed under references."
 type: software
 title: "Marmoset Atlas Mapper"
 version: "1.00"
@@ -12,13 +12,41 @@ url: "https://github.com/H-Yagishita/Marmoset_CT-Atlas_Mapper"
 license: MIT
 abstract: >-
   Marmoset Atlas Mapper is a Windows application that maps a CT image of a
-  common marmoset to the Brain/MINDS Marmoset Brain Atlas 2.0 without MRI of
-  that animal. The target CT is registered to six reference marmosets by
+  common marmoset to the Brain/MINDS Marmoset Brain Atlas 2.0 without requiring
+  MRI of that animal. The target CT is registered to six reference marmosets by
   landmark-based or ANTs registration, and the six resulting mappings are
-  averaged.
+  averaged with equal weights.
 keywords:
   - common marmoset
   - computed tomography
   - brain atlas
   - image registration
-  - electrode localization
+references:
+  - type: article
+    title: "A CT-to-atlas mapping framework using skull-base landmarks in marmosets"
+    authors:
+      - family-names: Yagishita
+        given-names: Haruya
+      - family-names: Kawabata
+        given-names: Masanori
+      - family-names: Nagai
+        given-names: Yuji
+      - family-names: Hori
+        given-names: Yuki
+      - family-names: Hirayama
+        given-names: Yuka
+      - family-names: Ebina
+        given-names: Teppei
+      - family-names: Sehara
+        given-names: Keisuke
+      - family-names: Oyama
+        given-names: Kei
+      - family-names: Matsuzaki
+        given-names: Masanori
+      - family-names: Minamimoto
+        given-names: Takafumi
+      - family-names: Isomura
+        given-names: Yoshikazu
+    journal: "bioRxiv"
+    year: 2026
+    doi: "10.1101/TODO_BIORXIV_DOI"

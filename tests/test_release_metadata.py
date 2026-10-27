@@ -31,7 +31,7 @@ def test_normalize_mode(old, current):
     assert normalize_registration_type(old) == current
 
 
-def test_reference_license_and_reserved_doi():
+def test_reference_license_and_version_doi():
     catalog = json.loads((ROOT / 'config/reference_data_catalog.json').read_text())
     assert catalog['landing_page_url'] == 'https://doi.org/10.5281/zenodo.23683937'
     assert 'Reference images, landmarks, and transforms: CC BY 4.0.' in catalog['license_summary']
@@ -50,7 +50,9 @@ def test_maintainer_notes_excluded_from_source_archives():
         assert f'/{name} export-ignore' in attributes
 
 
-def test_public_docs_have_no_unresolved_release_placeholders():
+def test_legacy_release_placeholders_absent():
+    # A preprint DOI may still be pending in the working draft. The separate
+    # publication preflight must pass before a public package can be built.
     for name in ['README.md', 'CHANGELOG.md', 'CITATION.cff', 'data/README.md',
                  'data/licenses/ReferenceLibrary-CC-BY-4.0.txt']:
         content = (ROOT / name).read_text(encoding='utf-8')
