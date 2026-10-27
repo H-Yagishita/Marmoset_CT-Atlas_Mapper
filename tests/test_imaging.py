@@ -6,7 +6,10 @@ from marmoset_atlas_mapper.imaging import (
     compose_user_to_atlas,
     matrix_to_sitk_affine,
 )
-from marmoset_atlas_mapper.image_resampling import resample_atlas_to_target
+from marmoset_atlas_mapper.image_resampling import (
+    resample_atlas_to_target,
+    resample_target_to_reference,
+)
 
 
 def test_matrix_to_sitk_affine_matches_numpy():
@@ -50,3 +53,25 @@ def test_vector_atlas_layer_is_resampled_channel_by_channel():
     )
     assert output.GetNumberOfComponentsPerPixel() == 3
     np.testing.assert_allclose(sitk.GetArrayFromImage(output)[2, 2, 2], (1.0, 2.0, 3.0))
+
+
+def test_target_ct_is_resampled_into_reference_with_exact_inverse_and_coverage():
+    target = sitk.GetImageFromArray(np.asarray([[[10.0, 20.0, 30.0]]], dtype=np.float32))
+    reference = sitk.Image((5, 1, 1), sitk.sitkFloat32)
+    target_to_reference = np.eye(4)
+    target_to_reference[0, 3] = 1.0
+
+    mapped, coverage = resample_target_to_reference(
+        target,
+        reference,
+        target_to_reference,
+    )
+
+    np.testing.assert_allclose(
+        sitk.GetArrayFromImage(mapped).reshape(-1),
+        [0.0, 10.0, 20.0, 30.0, 0.0],
+    )
+    np.testing.assert_array_equal(
+        sitk.GetArrayFromImage(coverage).reshape(-1),
+        [0, 1, 1, 1, 0],
+    )

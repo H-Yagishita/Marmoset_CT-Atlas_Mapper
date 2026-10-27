@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 from typing import Iterable, Mapping
@@ -108,3 +109,27 @@ def write_slicer_markups(
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def write_landmark_csv(
+    path: str | Path,
+    points_lps: Mapping[str, Iterable[float]],
+) -> None:
+    """Write an ordered landmark table in physical LPS millimetres."""
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("w", newline="", encoding="utf-8-sig") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["Label", "L_mm", "P_mm", "S_mm"])
+        writer.writeheader()
+        for label, position in points_lps.items():
+            xyz = np.asarray(tuple(position), dtype=float)
+            if xyz.shape != (3,) or not np.all(np.isfinite(xyz)):
+                raise ValueError(f"Invalid position for {label}: {xyz}")
+            writer.writerow(
+                {
+                    "Label": label,
+                    "L_mm": float(xyz[0]),
+                    "P_mm": float(xyz[1]),
+                    "S_mm": float(xyz[2]),
+                }
+            )

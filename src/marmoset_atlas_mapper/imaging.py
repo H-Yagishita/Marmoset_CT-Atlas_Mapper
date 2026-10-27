@@ -8,6 +8,7 @@ from typing import Iterable, Mapping
 
 import numpy as np
 import SimpleITK as sitk
+from .native_io import read_image, write_transform
 
 from .landmarks import write_slicer_markups
 from .registration import RegistrationResult
@@ -22,11 +23,37 @@ class VolumeData:
     array_zyx: np.ndarray
     window_min: float
     window_max: float
+    default_window_min: float | None = None
+    default_window_max: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.default_window_min is None:
+            self.default_window_min = self.window_min
+        if self.default_window_max is None:
+            self.default_window_max = self.window_max
+
+    @property
+    def window(self) -> float:
+        return self.window_max - self.window_min
+
+    @property
+    def level(self) -> float:
+        return (self.window_min + self.window_max) / 2.0
+
+    def set_window_level(self, window: float, level: float) -> None:
+        if not np.isfinite([window, level]).all() or window <= 0:
+            raise ValueError("Window must be positive and Window/Level must be finite.")
+        self.window_min = float(level - window / 2.0)
+        self.window_max = float(level + window / 2.0)
+
+    def reset_window_level(self) -> None:
+        self.window_min = float(self.default_window_min)
+        self.window_max = float(self.default_window_max)
 
     @classmethod
     def read(cls, path: str | Path) -> "VolumeData":
         source = Path(path)
-        image = sitk.ReadImage(str(source))
+        image = read_image(source)
         return cls.from_image(image, source)
 
     @classmethod
@@ -34,6 +61,8 @@ class VolumeData:
         source = Path(source_path)
         if image.GetDimension() != 3:
             raise ValueError(f"Expected a 3D image, got {image.GetDimension()}D: {source}")
+        if image.GetNumberOfComponentsPerPixel() != 1:
+            raise ValueError(f"Expected a scalar 3D image, not a vector image: {source}")
         display_image = sitk.DICOMOrient(image, "LPS")
         array = sitk.GetArrayViewFromImage(display_image)
         finite = np.asarray(array[np.isfinite(array)], dtype=np.float64)
@@ -194,7 +223,7 @@ def save_registration_outputs(
 ) -> None:
     output = Path(output_directory)
     output.mkdir(parents=True, exist_ok=True)
-    sitk.WriteTransform(
+    write_transform(
         matrix_to_sitk_affine(result.matrix_lps),
         str(output / f"UserCT_to_{reference_id}_{result.method}.tfm"),
     )

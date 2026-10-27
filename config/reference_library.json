@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "library_id": "bma2_marmoset_ct_k04",
+  "library_id": "bma2_manuscript_nref6_v2",
   "atlas": {
     "id": "BMA2.0",
     "space": "BMA 2.0 / Brain Space 3",
@@ -8,17 +8,46 @@
     "label_map": "data/atlas/BMA2.0_regions_label.nii.gz",
     "color_table": "data/atlas/BMA2.0_regions_list.ctbl",
     "layers": {
-      "BMA 2.0 in vivo T2WI": {"path": "data/atlas/BMA2.0_avg_invivo_T2WI.nii.gz", "interpolation": "linear"},
-      "BMA 2.0 ex vivo T2WI": {"path": "data/atlas/BMA2.0_avg_exvivo_T2WI.nii.gz", "interpolation": "linear"},
-      "BMA 2.0 Nissl": {"path": "data/atlas/BMA2.0_avg_nissl.nii.gz", "interpolation": "linear"},
-      "BMA 2.0 Myelin": {"path": "data/atlas/BMA2.0_avg_myelin.nii.gz", "interpolation": "linear"},
-      "BMA 2.0 Regions": {"path": "data/atlas/BMA2.0_regions_label.nii.gz", "interpolation": "nearest"}
+      "BMA 2.0 in vivo T2WI": {
+        "path": "data/atlas/BMA2.0_avg_invivo_T2WI.nii.gz",
+        "interpolation": "linear"
+      },
+      "BMA 2.0 ex vivo T2WI": {
+        "path": "data/atlas/BMA2.0_avg_exvivo_T2WI.nii.gz",
+        "interpolation": "linear"
+      },
+      "BMA 2.0 Nissl": {
+        "path": "data/atlas/BMA2.0_avg_nissl.nii.gz",
+        "interpolation": "linear"
+      },
+      "BMA 2.0 Myelin": {
+        "path": "data/atlas/BMA2.0_avg_myelin.nii.gz",
+        "interpolation": "linear"
+      },
+      "BMA 2.0 Regions": {
+        "path": "data/atlas/BMA2.0_regions_label.nii.gz",
+        "interpolation": "nearest"
+      }
     },
     "license": "CC BY 4.0",
     "source_url": "https://doi.org/10.6084/m9.figshare.29992687"
   },
   "landmarks": {
-    "allowed_labels": ["LM01", "LM02", "LM03", "LM04", "LM05", "LM06", "LM07", "LM08", "LM09", "LM10", "LM11", "LM12", "LM13"],
+    "allowed_labels": [
+      "LM01",
+      "LM02",
+      "LM03",
+      "LM04",
+      "LM05",
+      "LM06",
+      "LM07",
+      "LM08",
+      "LM09",
+      "LM10",
+      "LM11",
+      "LM12",
+      "LM13"
+    ],
     "minimum_count": 3,
     "recommended_count": 5
   },
@@ -51,28 +80,49 @@
   },
   "references": [
     {
-      "id": "HJ0285F",
-      "ct": "data/reference/HJ0285F_CT.nii.gz",
-      "landmarks": "data/reference/HJ0285F_Landmarks.mrk.json",
-      "ct_to_atlas_forward": "data/transforms/HJ0285F_CT_to_BMA2_PointTransform.h5"
+      "id": "HH0312F",
+      "ct": "data/reference_v2/HH0312F_CT.nii.gz",
+      "landmarks": "data/reference_v2/HH0312F_Landmarks.mrk.json",
+      "mri": "data/reference_v2/HH0312F_MRI_t2r.nii.gz",
+      "ct_to_atlas_forward": "data/transforms_v2/HH0312F_CT_to_BMA2_PointTransform.h5"
     },
     {
       "id": "HH0424M",
-      "ct": "data/reference/HH0424M_CT.nii",
-      "landmarks": "data/reference/HH0424M_Landmarks.mrk.json",
-      "ct_to_atlas_forward": "data/transforms/HH0424M_CT_to_BMA2_PointTransform.h5"
+      "ct": "data/reference_v2/HH0424M_CT.nii.gz",
+      "landmarks": "data/reference_v2/HH0424M_Landmarks.mrk.json",
+      "mri": "data/reference_v2/HH0424M_MRI_t2r.nii.gz",
+      "ct_to_atlas_forward": "data/transforms_v2/HH0424M_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "HH0428M",
+      "ct": "data/reference_v2/HH0428M_CT.nii.gz",
+      "landmarks": "data/reference_v2/HH0428M_Landmarks.mrk.json",
+      "mri": "data/reference_v2/HH0428M_MRI_t2r.nii.gz",
+      "ct_to_atlas_forward": "data/transforms_v2/HH0428M_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "HJ0285F",
+      "ct": "data/reference_v2/HJ0285F_CT.nii.gz",
+      "landmarks": "data/reference_v2/HJ0285F_Landmarks.mrk.json",
+      "mri": "data/reference_v2/HJ0285F_MRI_t2r.nii.gz",
+      "ct_to_atlas_forward": "data/transforms_v2/HJ0285F_CT_to_BMA2_PointTransform.h5"
     },
     {
       "id": "J0476M",
-      "ct": "data/reference/J0476M_CT.nrrd",
-      "landmarks": "data/reference/J0476M_Landmarks.mrk.json",
-      "ct_to_atlas_forward": "data/transforms/J0476M_CT_to_BMA2_PointTransform.h5"
+      "ct": "data/reference_v2/J0476M_CT.nii.gz",
+      "landmarks": "data/reference_v2/J0476M_Landmarks.mrk.json",
+      "mri": "data/reference_v2/J0476M_MRI_t2r.nii.gz",
+      "ct_to_atlas_forward": "data/transforms_v2/J0476M_CT_to_BMA2_PointTransform.h5"
     },
     {
       "id": "J0477M",
-      "ct": "data/reference/J0477M_CT.nii",
-      "landmarks": "data/reference/J0477M_Landmarks.mrk.json",
-      "ct_to_atlas_forward": "data/transforms/J0477M_CT_to_BMA2_PointTransform.h5"
+      "ct": "data/reference_v2/J0477M_CT.nii.gz",
+      "landmarks": "data/reference_v2/J0477M_Landmarks.mrk.json",
+      "mri": "data/reference_v2/J0477M_MRI_t2r.nii.gz",
+      "ct_to_atlas_forward": "data/transforms_v2/J0477M_CT_to_BMA2_PointTransform.h5"
     }
-  ]
+  ],
+  "expected_reference_count": 6,
+  "dataset_version": "2.0.0",
+  "analysis_id": "260918"
 }

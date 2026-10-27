@@ -113,8 +113,9 @@ def load_reference_library(
         )
         for value in payload["references"]
     )
-    if len(references) != 4:
-        raise ValueError(f"K04 consensus requires exactly four references, found {len(references)}.")
+    expected_count = int(payload.get("expected_reference_count", 6))
+    if expected_count < 1 or len(references) != expected_count:
+        raise ValueError(f"This library requires Nref={expected_count}, found {len(references)}.")
     if len({item.reference_id for item in references}) != len(references):
         raise ValueError("Reference IDs must be unique.")
     library = ReferenceLibrary(

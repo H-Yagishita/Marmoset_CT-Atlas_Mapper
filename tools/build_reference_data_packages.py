@@ -1,8 +1,8 @@
 """Build the separately published, versioned reference-data ZIP package.
 
 This tool intentionally excludes the obsolete *_Atlas_ANTs.h5 files. The
-application's forward K04 pipeline uses the four validated PointTransform H5
-files. Run this only after redistribution approval has been recorded.
+application's forward consensus pipeline uses the validated PointTransform H5
+files listed in the catalog. Publication requires redistribution approval.
 """
 
 from __future__ import annotations
@@ -81,7 +81,7 @@ def main() -> int:
         output / package_name, root, package_files, catalog
     )
 
-    manifest = output / "MarmosetAtlasMapper_Data_v1.0_RELEASE_MANIFEST.json"
+    manifest = output / f"{Path(package_name).stem}_RELEASE_MANIFEST.json"
     manifest.write_text(json.dumps(results, indent=2), encoding="utf-8")
     print(manifest)
     return 0

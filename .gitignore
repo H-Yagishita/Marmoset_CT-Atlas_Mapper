@@ -6,12 +6,33 @@ __pycache__/
 build/
 dist/
 *.spec
+!packaging/*.spec
 outputs/
+runtime/ants/
+runtime/ants-preparation-*/
+
+# Local research/manuscript work is not part of the application source release.
+/figure7_practice_stage/
+/figure7_runtime_cache/
+/manuscript_review_261023/
+/publication_release/
+/publication_tools/
+/stats_table/
+/m260819_*.m
+/m260819_*.mlx
+/m260901_*.m
+/m260901_*.mlx
+/make_figure5_livescript.m
+/black_sphere_from_markups.py
+/tools/260911_*.py
+/tools/260917_*.py
 
 # Large runtime/reference datasets are published separately as versioned archives.
 data/atlas/
 data/reference/
 data/transforms/
+data/reference_v2/
+data/transforms_v2/
 
 # Local validation workspace scripts contain study-specific paths and are not public source.
 260807b_Create_MultiReferenceConsensusTransforms.py

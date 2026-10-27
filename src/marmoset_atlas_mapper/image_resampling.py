@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import numpy as np
 import SimpleITK as sitk
+
+from .imaging import matrix_to_sitk_affine
 
 
 def resample_atlas_to_target(
@@ -71,3 +74,38 @@ def resample_target_to_atlas(
         sitk.sitkUInt8,
     )
     return sitk.Mask(mapped, native_mask), native_mask
+
+
+def resample_target_to_reference(
+    target_image: sitk.Image,
+    reference_image: sitk.Image,
+    target_to_reference_matrix_lps: np.ndarray,
+) -> tuple[sitk.Image, sitk.Image]:
+    """Resample Target CT into a Reference CT grid using an exact linear inverse.
+
+    SimpleITK resampling requires an output-Reference -> input-Target mapping,
+    so the landmark/ANTs point-forward Target -> Reference matrix is inverted here.
+    The returned mask distinguishes observed Target CT coverage from zero-filled
+    regions in the larger Reference geometry.
+    """
+    reference_to_target = matrix_to_sitk_affine(target_to_reference_matrix_lps).GetInverse()
+    mapped = sitk.Resample(
+        target_image,
+        reference_image,
+        reference_to_target,
+        sitk.sitkLinear,
+        0.0,
+        sitk.sitkFloat32,
+    )
+    source_coverage = sitk.Image(target_image.GetSize(), sitk.sitkUInt8)
+    source_coverage.CopyInformation(target_image)
+    source_coverage += 1
+    coverage = sitk.Resample(
+        source_coverage,
+        reference_image,
+        reference_to_target,
+        sitk.sitkNearestNeighbor,
+        0,
+        sitk.sitkUInt8,
+    )
+    return sitk.Mask(mapped, coverage), coverage

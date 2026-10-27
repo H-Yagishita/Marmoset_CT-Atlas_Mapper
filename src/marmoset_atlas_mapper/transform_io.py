@@ -10,6 +10,7 @@ import SimpleITK as sitk
 
 from .data_manager import load_data_catalog
 from .paths import user_state_root
+from .native_io import native_input_path
 
 
 DRIVE_REMOTE = 4
@@ -100,4 +101,5 @@ def localize_hdf5_transform(path: str | Path) -> Path:
 
 
 def read_transform(path: str | Path) -> sitk.Transform:
-    return sitk.ReadTransform(str(localize_hdf5_transform(path)))
+    with native_input_path(localize_hdf5_transform(path)) as native:
+        return sitk.ReadTransform(str(native))

@@ -65,3 +65,12 @@ def test_saved_reloaded_h5_preserves_coordinates(tmp_path: Path):
     points = np.asarray([(-1.0, -1.0, -1.0), (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)])
     error = write_transform_checked(tmp_path / "forward.h5", transform, points)
     assert error < 1e-10
+
+
+def test_six_reference_translations_are_equal_weight_and_order_invariant():
+    offsets = [(1,0,0), (0,2,0), (0,0,3), (-4,0,0), (0,-5,0), (0,0,-6)]
+    fields = {str(i): sample_forward_transform(translation(v), GRID) for i, v in enumerate(offsets)}
+    field = equal_weight_consensus(fields)
+    np.testing.assert_allclose(sitk.GetArrayFromImage(field)[2,2,2], np.mean(offsets, axis=0))
+    reverse = equal_weight_consensus(dict(reversed(list(fields.items()))))
+    np.testing.assert_array_equal(sitk.GetArrayFromImage(field), sitk.GetArrayFromImage(reverse))

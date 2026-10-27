@@ -1,11 +1,24 @@
 # Marmoset Atlas Mapper
 
 A standalone Windows desktop application for landmark-based mapping between a
-user marmoset CT and the Brain/MINDS BMA 2.0 atlas. The K04 reference library
-contains HJ0285F, HH0424M, J0476M, and J0477M.
+user marmoset CT and the Brain/MINDS BMA 2.0 atlas. Version 0.3.1 uses a six-reference
+library (Nref=6): HH0312F, HH0424M, HH0428M, HJ0285F, J0476M, and J0477M.
 
-This is a local research prototype. It is not a medical device and is not for
-diagnostic or clinical use.
+This software was developed for research and has not been validated for
+diagnostic or clinical use. This statement describes its intended use and
+validation status; it does not add restrictions to the software license.
+
+## 0.3.1 standalone ANTs update
+
+The Windows distribution now includes ANTs 2.6.5. Neither 3D Slicer nor
+SlicerANTs is required. Registration parameters and six-reference consensus
+are unchanged; the native ANTs/ITK build has changed, so floating-point results
+need not match the earlier runtime exactly. Existing results are not recomputed.
+
+ANTs replaces the former single-reference intensity backend. All current
+registration modes use Nref=6; no BRAINSFit executable or result compatibility
+is retained. Tests use disposable outputs; passing tests do not establish
+anatomical accuracy or absence of all bugs.
 
 ## Current workflow
 
@@ -13,29 +26,33 @@ diagnostic or clinical use.
 2. Use the fixed J0476M preview to identify landmarks and place corresponding
    landmarks in the Target CT. Correspondence is by label, never by JSON order.
 3. Select a registration type:
-   - `Landmark (Skull-base)`: LM01-LM08, four-reference K04 consensus;
-   - `Landmark (Skull-all)`: LM01-LM13, four-reference K04 consensus;
-   - `General (BRAINSFit)`: LM01-LM13 landmark-rigid initialization to J0476M,
-     followed by BRAINSFit Rigid or Similarity intensity registration.
+   - `Landmark (Skull-base)`: LM01-LM08, six-reference consensus;
+   - `Landmark (Skull-all)`: LM01-LM13, six-reference consensus;
+   - `ANTs registration`: selected LM01-LM13 provide a Rigid initialization
+     to each of the six references, followed by unmasked ANTs Rigid (6 DOF) or
+     isotropic Similarity (7 DOF) intensity registration.
 4. Choose Rigid or Similarity and run registration. At least three
    non-collinear common landmarks are required; five or more are recommended.
    Missing landmarks are excluded consistently from every applicable route.
-5. Landmark modes construct four complete forward routes:
+5. All three modes construct six complete forward routes:
    `Target CT -> Reference CT -> BMA 2.0`. Each route is sampled on the same
    axis-aligned RAS displacement grid (0.5 mm spacing, 1.0 mm padding), and the
-   four forward displacement vectors are averaged with equal weight.
+   six forward displacement vectors are averaged with equal weight.
 6. Inspect the Quality Check window:
    - Atlas MRI and each transformed reference CT overlaid on the Target CT;
-   - reference-wise FRE (placement QC, not an atlas-accuracy proxy);
-   - component/consensus field approximation error;
-   - RMS, maximum-from-consensus, and maximum-pairwise uncertainty.
+   - independently adjustable Red/Green overlay contrast;
+   - saved forward/inverse QC and uncertainty diagnostics in the output folder.
 7. The application automatically generates 3A, every configured 3B layer, and
    the registration-landmark 3C output. The Atlas viewer opens any saved layer
    in Target CT geometry without recomputing registration.
 
 The lower dock shows a timestamped processing log and can be resized or hidden.
-Reference-wise FRE is retained as a numerical landmark-placement QC measure;
-there is no single-reference FRE warning, selection, or weighting.
+The Target CT panel has `Window` and `Level` sliders with numeric controls and an `Auto / Reset`
+button. These change display contrast only, including for normalized CT intensities;
+voxel values, physical geometry, landmarks, and registration are unchanged.
+The display settings are saved with the workspace and restored by `Open results`.
+Reference-wise FRE is retained in the saved numerical diagnostics, not displayed
+in the results panel; there is no single-reference FRE warning, selection, or weighting.
 
 For 3A, the application explicitly solves the inverse on an Atlas-space grid
 using a global-affine initialization followed by vectorized Newton iterations.
@@ -45,14 +62,21 @@ QC passes: round-trip P95 below 0.25 mm with at least the configured number of
 valid overlap samples. Atlas coverage is saved as descriptive information only
 and never gates partial-CT processing; unobserved regions remain zero in 3A.
 
-## K04 output set
+## Nref=6 output set
 
 The output directory is selected before registration. A successful run writes:
 
-- `Target_CT_to_BMA_MultiRef_K04_Forward.h5`;
-- `Target_CT_to_BMA_MultiRef_K04_Displacement.nrrd`;
-- four sampled single-reference complete forward transforms in
+- `Target_CT_to_BMA_MultiRef_Nref6_Forward.h5`;
+- `Target_CT_to_BMA_MultiRef_Nref6_Displacement.nrrd`;
+- six sampled single-reference complete forward transforms in
   `SingleReference/`;
+- Target CT resampled into every participating Reference CT geometry in
+  `TargetCT_in_Reference/`, with observed-FOV masks in its `CoverageMasks/`
+  subdirectory; these use exact inverses of the Rigid/Similarity transforms
+  and are independent of Atlas inverse QC;
+- the exact landmark subset used by the transform in `UsedLandmarks/` as both
+  Slicer Markups JSON and LPS-coordinate CSV for the Target CT and every
+  participating Reference CT;
 - every configured Atlas MRI/Nissl/Myelin/Regions layer resampled into Target
   CT geometry in `AtlasLayers_in_TargetCT/`;
 - when inverse QC passes, `TargetCT_in_BMA2.0.nii.gz`, an Atlas-to-Target
@@ -65,14 +89,17 @@ The output directory is selected before registration. A successful run writes:
 - three uncertainty volumes and `Uncertainty_Summary.csv`;
 - `Run_Manifest.csv` and `Run_Manifest.json`.
 
-General mode writes the corresponding primary forward transform as
-`Target_CT_to_BMA_General_J0476M_Forward.h5`, retains the landmark-rigid initial
-and BRAINSFit transform/report in `BRAINSFit/`, and produces the same automatic
-Atlas-layer, inverse-when-valid, landmark, QC, viewer, and manifest outputs.
+ANTs mode uses the prefix `Target_CT_to_BMA_ANTs_MultiRef_Nref6` and
+retains per-reference initial transforms, native ANTs transforms, commands,
+software/input hashes, final point-forward matrices and logs under `ANTs/`.
+It uses the same consensus, inverse QC, saved workspace and automatic outputs.
 
 `Open results` restores the Target CT, placed landmarks, registration mode,
 transform method, QC state, Atlas layers, and interactive viewers without
 recomputing registration. `Open Folder` opens the active output directory.
+Saved four-reference results from the previous version can still be opened.
+Old General/BRAINSFit results are not supported; open them with the backed-up old application.
+Existing Landmark results remain readable.
 
 All calculation-core coordinates are physical LPS coordinates in millimetres.
 The sampling lattice is defined as an axis-aligned RAS grid and represented in
@@ -89,13 +116,17 @@ py -3.12 -m venv .venv
 .venv\Scripts\python.exe app.py
 ```
 
-The prepared local checkout can also be started with `run_app.bat`.
+The prepared local checkout can also be started with `run_app.bat`. For ANTs
+registration, prepare the native runtime as described in
+[ANTs registration](docs/ANTS_REGISTRATION.md#building-the-standalone-runtime);
+installing the Python requirements alone does not install ANTs.
 
 On first launch, the application checks for the version pinned in
-`config/reference_data_catalog.json`. The large runtime data are downloaded
-manually from the Zenodo link published in this README:
+`config/reference_data_catalog.json`. The reference-data package is being prepared
+for release; no public download URL is available yet. Once the separate data
+deposit is published, installation will be:
 
-1. Download `MarmosetAtlasMapper_Data_v1.0.zip`.
+1. Download `MarmosetAtlasMapper_Data_v2.0.zip`.
 2. Extract the ZIP; its top-level content is a folder named `data`.
 3. Copy the extracted `data` folder directly beside `MarmosetAtlasMapper.exe`
    (or into the repository root when running from source).
@@ -109,12 +140,12 @@ MarmosetAtlasMapper/
 |-- _internal/
 |-- data/
 |   |-- atlas/
-|   |-- reference/
-|   `-- transforms/
+|   |-- reference_v2/
+|   `-- transforms_v2/
 `-- README.md
 ```
 
-When an existing library is selected on a different Windows drive, the four
+When an existing library is selected on a different Windows drive, the six
 large HDF5 transforms are checksum-verified and cached locally before
 SimpleITK opens them. This avoids HDF5 access violations seen on some external
 or mapped drives; CT/MRI images themselves remain in the selected library.
@@ -123,6 +154,10 @@ The Zenodo landing-page URL and package checksum remain blank until
 redistribution permission and the permanent data deposit are complete.
 
 ## Build the portable application
+
+Install `requirements-dev.txt` and prepare the pinned ANTs runtime using
+[the runtime preparation instructions](docs/ANTS_REGISTRATION.md#building-the-standalone-runtime)
+before building.
 
 ```powershell
 .\build_exe.ps1
@@ -140,6 +175,15 @@ The data-free build displays the manual data-placement instructions on first lau
 one-directory build is intentional because Qt and SimpleITK are too large for a
 practical single-file EXE.
 
+The maintained build specification validates Qt's Windows ICU API and excludes
+conflicting build-host ICU DLLs. To verify a packaged build, set its reference
+data location and run `MarmosetAtlasMapper.exe --gui-smoke-test <report.json>`.
+This initializes the native Windows Qt platform, loads the reference CT, tests
+contrast controls, and saves a rendered main-window image alongside the report.
+The separate `--smoke-test` checks the image/transform core only.
+When updating an installation, replace the `_internal` runtime directory as a
+unit (retain a backup), rather than merging old and new DLL files.
+
 ## Reference-library configuration and provenance
 
 The runtime library is defined in `config/reference_library.json`, while its
@@ -148,21 +192,34 @@ SHA-256 checksums are defined in `config/reference_data_catalog.json`. Runtime
 paths are resolved from the application folder; processing modules do not hard-code
 absolute paths or individual IDs. The manifests pin:
 
-- four reference CTs and their LM01-LM13 landmarks;
+- six reference CTs, corresponding MRI, and LM01-LM13 landmarks;
 - validated point-forward transforms from each reference CT to BMA 2.0;
 - BMA 2.0 in vivo/ex vivo T2WI, Nissl, myelin, region label map, and color table;
 - consensus/inverse grid parameters, deterministic QC sampling, thresholds,
   and provenance metadata.
 
-The J0476M visual-preview profile is fixed in the user interface. General mode
-discovers an installed 3D Slicer/BRAINSFit runtime without storing an absolute
-machine path; `MARM_ATLAS_SLICER` can explicitly point to `Slicer.exe`. The
-forward transforms are generated by
-`tools/generate_reference_forward_transforms.py`; maximum LM01-LM08
-round-trip errors are below 0.0005 mm for all four references.
+The J0476M visual-preview profile is fixed in the user interface. ANTs mode
+runs the bundled, checksum-verified Windows ANTs executable directly. No Slicer
+installation or SlicerANTs extension is required. An explicit standalone runtime
+override can be supplied using `MARM_ATLAS_ANTS` (absolute antsRegistration.exe
+path); `MARM_ATLAS_SLICER` is no longer used. No implicit runtime or BRAINSFit
+fallback is performed. Settings are in `config/ants_registration.json`; see
+`docs/ANTS_REGISTRATION.md` for transform conventions and validation. The
+current library is prepared with `tools/prepare_manuscript_reference_library.py`.
+The exact CTs and fresh landmarks used by the 260918 manuscript analysis are
+copied together with CT-to-MRI and MRI-to-Atlas transformations originating in
+260911. Exploratory optimized landmark variants are not substituted. Inputs are
+verified against the manuscript evaluation's SHA-256 manifest. No runtime path
+points outside the installed software/data folder.
+
+The original ITK pull transforms are converted to point-forward transforms and
+verified against every intracranial grid point in the manuscript direct routes.
+For all six references, the coordinate difference P95 is below 0.01 mm and the
+maximum pull/forward round-trip error is below 0.0014 mm. Per-reference values
+and source hashes are stored in `data/reference_v2/PROVENANCE.json`.
 
 See `docs/DATA_DISTRIBUTION.md` for archive construction and release steps. The
-four legacy `*_Atlas_ANTs.h5` files are not required by the current forward K04
+legacy `*_Atlas_ANTs.h5` files are not required by the current forward consensus
 pipeline and are excluded from the public reference-data packages.
 
 ## Tests
@@ -175,16 +232,39 @@ Tests cover Rigid and Similarity recovery, label-order invariance,
 missing/duplicate/collinear landmarks, identical and known-translation field
 means, H5 save/reload coordinate preservation, point-wise arithmetic-mean
 agreement, reference-order invariance, vector Atlas layers, and robust inverse
-recovery for translation and rotation.
+recovery for translation and rotation, six-reference output/reload, previous
+four-reference result compatibility, and display-only Window/Level controls.
+
+## Software license and citation
+
+The original Marmoset Atlas Mapper application code and accompanying software
+documentation, tests, and build tools are licensed under the [MIT License](LICENSE).
+Copyright (c) 2026 Haruya Yagishita. Existing third-party notices and separately
+specified licenses take precedence for their respective components.
+
+The software license does not cover Atlas data, reference CT/MRI images,
+landmark annotations, derived transforms, or manuscript/research-data packages.
+See [data/README.md](data/README.md) for data-specific terms and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for external components.
+
+If you use Marmoset Atlas Mapper in research, please cite the software repository
+and the version used:
+https://github.com/H-Yagishita/Marmoset_CT-Atlas_Mapper.
+The associated manuscript citation will be added when available. This citation
+request is not an additional condition of the MIT License. Attribution
+requirements of the Atlas and other third-party materials still apply.
+
+The Windows build includes `LICENSE` and `THIRD_PARTY_NOTICES.md` beside the
+executable. Third-party license files are also distributed with the runtime.
 
 ## Data licensing
 
 Brain/MINDS BMA 2.0 data are licensed under CC BY 4.0. See `data/README.md`.
-Distribution approval for the four reference CTs, landmarks, and derived
+Distribution approval for the six reference CT/MRI datasets, landmarks, and derived
 transforms is pending confirmation by the data owners; do not publish
-`data/reference` or `data/transforms` until approval is recorded.
+`data/reference_v2` or `data/transforms_v2` until approval is recorded.
 
 The large runtime datasets are ignored by Git and must be published as separate
 versioned data assets. Before making this repository public, complete
-`PUBLICATION_CHECKLIST.md`, including the project software license, copyright
-holder, data permissions, archive DOI/URLs/checksums, and `CITATION.cff`.
+`PUBLICATION_CHECKLIST.md`, including data permissions, dependency-license
+compliance, archive DOI/URLs/checksums, and `CITATION.cff`.

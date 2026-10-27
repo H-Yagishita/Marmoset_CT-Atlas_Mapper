@@ -3,6 +3,8 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import os
+import tempfile
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
@@ -11,6 +13,7 @@ import SimpleITK as sitk
 
 from .transform_composition import transform_points
 from .transform_io import read_transform
+from .native_io import write_transform
 
 
 def sha256_file(path: str | Path) -> str:
@@ -34,7 +37,27 @@ def write_csv(path: str | Path, rows: Sequence[Mapping[str, object]], fieldnames
 def write_json(path: str | Path, payload: Mapping[str, object]) -> None:
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=destination.parent,
+                                         prefix=destination.name + ".", suffix=".tmp", delete=False) as handle:
+            temporary = Path(handle.name)
+            handle.write(json.dumps(payload, indent=2, ensure_ascii=False))
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary.replace(destination)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
+
+
+def prepare_output_directory(path: str | Path) -> Path:
+    """Never mix a new run with earlier or partially written scientific outputs."""
+    output = Path(path).resolve()
+    if output.exists() and (not output.is_dir() or any(output.iterdir())):
+        raise FileExistsError(f"Use a new or empty output directory: {output}")
+    output.mkdir(parents=True, exist_ok=True)
+    return output
 
 
 def write_transform_checked(
@@ -46,7 +69,7 @@ def write_transform_checked(
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     expected = transform_points(transform, check_points_lps)
-    sitk.WriteTransform(transform, str(destination))
+    write_transform(transform, destination)
     reloaded = read_transform(destination)
     actual = transform_points(reloaded, check_points_lps)
     maximum_error = float(np.max(np.linalg.norm(actual - expected, axis=1)))

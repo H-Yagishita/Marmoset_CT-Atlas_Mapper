@@ -1,4 +1,4 @@
-param([switch]$SkipData)
+param([switch]$SkipData, [string]$OutputRoot = '')
 
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
@@ -8,23 +8,28 @@ if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
     throw 'Virtual environment not found. Create .venv and install requirements-dev.txt first.'
 }
 
-& $python -m PyInstaller `
+$buildOptions = @()
+if ($OutputRoot) {
+    $resolvedOutput = [IO.Path]::GetFullPath($OutputRoot)
+    $workspacePath = [IO.Path]::GetFullPath($PSScriptRoot).TrimEnd('\') + '\'
+    if (-not $resolvedOutput.StartsWith($workspacePath, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'OutputRoot must be inside this source workspace.'
+    }
+    $buildOptions = @('--distpath', (Join-Path $resolvedOutput 'dist'), '--workpath', (Join-Path $resolvedOutput 'build'))
+}
+& $python -m PyInstaller @buildOptions `
     --noconfirm `
     --clean `
-    --windowed `
-    --onedir `
-    --name MarmosetAtlasMapper `
-    --icon "assets\marmoset_atlas_mapper_icon.ico" `
-    --paths (Join-Path $PSScriptRoot 'src') `
-    --add-data "config;config" `
-    --add-data "assets;assets" `
-    app.py
+    (Join-Path $PSScriptRoot 'packaging\MarmosetAtlasMapper.spec')
+if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed: $LASTEXITCODE" }
 
 $distRoot = Join-Path $PSScriptRoot 'dist\MarmosetAtlasMapper'
+if ($OutputRoot) { $distRoot = Join-Path $resolvedOutput 'dist\MarmosetAtlasMapper' }
 if (-not $SkipData) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'data') -Destination $distRoot -Recurse -Force
 }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'README.md') -Destination $distRoot -Force
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'LICENSE') -Destination $distRoot -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'THIRD_PARTY_NOTICES.md') -Destination $distRoot -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'assets') -Destination $distRoot -Recurse -Force
 

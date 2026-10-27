@@ -2,7 +2,21 @@
   "shared": {
     "atlas_space": "BMA 2.0 / Brain Space 3",
     "registration_method": "Rigid",
-    "registration_labels": ["LM01", "LM02", "LM03", "LM04", "LM05", "LM06", "LM07", "LM08", "LM09", "LM10", "LM11", "LM12", "LM13"],
+    "registration_labels": [
+      "LM01",
+      "LM02",
+      "LM03",
+      "LM04",
+      "LM05",
+      "LM06",
+      "LM07",
+      "LM08",
+      "LM09",
+      "LM10",
+      "LM11",
+      "LM12",
+      "LM13"
+    ],
     "atlas_reference": "data/atlas/BMA2.0_avg_invivo_T2WI.nii.gz",
     "atlas_layers": {
       "BMA 2.0 in vivo T2WI": {
@@ -42,36 +56,52 @@
   },
   "references": [
     {
-      "id": "bma2_hj0285f",
-      "display_name": "BMA 2.0 (HJ0285F reference)",
-      "reference_id": "HJ0285F",
-      "reference_ct": "data/reference/HJ0285F_CT.nii.gz",
-      "reference_landmarks": "data/reference/HJ0285F_Landmarks.mrk.json",
-      "reference_to_atlas_point_transform": "data/transforms/HJ0285F_CT_to_BMA2_PointTransform.h5"
+      "id": "bma2_hh0312f",
+      "display_name": "BMA 2.0 (HH0312F reference)",
+      "reference_id": "HH0312F",
+      "reference_ct": "data/reference_v2/HH0312F_CT.nii.gz",
+      "reference_landmarks": "data/reference_v2/HH0312F_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms_v2/HH0312F_CT_to_BMA2_PointTransform.h5"
     },
     {
       "id": "bma2_hh0424m",
       "display_name": "BMA 2.0 (HH0424M reference)",
       "reference_id": "HH0424M",
-      "reference_ct": "data/reference/HH0424M_CT.nii",
-      "reference_landmarks": "data/reference/HH0424M_Landmarks.mrk.json",
-      "reference_to_atlas_point_transform": "data/transforms/HH0424M_CT_to_BMA2_PointTransform.h5"
+      "reference_ct": "data/reference_v2/HH0424M_CT.nii.gz",
+      "reference_landmarks": "data/reference_v2/HH0424M_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms_v2/HH0424M_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "bma2_hh0428m",
+      "display_name": "BMA 2.0 (HH0428M reference)",
+      "reference_id": "HH0428M",
+      "reference_ct": "data/reference_v2/HH0428M_CT.nii.gz",
+      "reference_landmarks": "data/reference_v2/HH0428M_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms_v2/HH0428M_CT_to_BMA2_PointTransform.h5"
+    },
+    {
+      "id": "bma2_hj0285f",
+      "display_name": "BMA 2.0 (HJ0285F reference)",
+      "reference_id": "HJ0285F",
+      "reference_ct": "data/reference_v2/HJ0285F_CT.nii.gz",
+      "reference_landmarks": "data/reference_v2/HJ0285F_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms_v2/HJ0285F_CT_to_BMA2_PointTransform.h5"
     },
     {
       "id": "bma2_j0476m",
       "display_name": "BMA 2.0 (J0476M reference)",
       "reference_id": "J0476M",
-      "reference_ct": "data/reference/J0476M_CT.nrrd",
-      "reference_landmarks": "data/reference/J0476M_Landmarks.mrk.json",
-      "reference_to_atlas_point_transform": "data/transforms/J0476M_CT_to_BMA2_PointTransform.h5"
+      "reference_ct": "data/reference_v2/J0476M_CT.nii.gz",
+      "reference_landmarks": "data/reference_v2/J0476M_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms_v2/J0476M_CT_to_BMA2_PointTransform.h5"
     },
     {
       "id": "bma2_j0477m",
       "display_name": "BMA 2.0 (J0477M reference)",
       "reference_id": "J0477M",
-      "reference_ct": "data/reference/J0477M_CT.nii",
-      "reference_landmarks": "data/reference/J0477M_Landmarks.mrk.json",
-      "reference_to_atlas_point_transform": "data/transforms/J0477M_CT_to_BMA2_PointTransform.h5"
+      "reference_ct": "data/reference_v2/J0477M_CT.nii.gz",
+      "reference_landmarks": "data/reference_v2/J0477M_Landmarks.mrk.json",
+      "reference_to_atlas_point_transform": "data/transforms_v2/J0477M_CT_to_BMA2_PointTransform.h5"
     }
   ]
 }

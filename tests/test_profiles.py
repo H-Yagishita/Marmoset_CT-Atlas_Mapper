@@ -5,9 +5,9 @@ from marmoset_atlas_mapper.reference_library import load_reference_library
 from marmoset_atlas_mapper.landmarks import load_slicer_markups
 
 
-def test_all_four_reference_profiles_are_complete():
+def test_all_six_reference_profiles_are_complete():
     profiles = load_profiles()
-    assert [profile.reference_id for profile in profiles] == ["HJ0285F", "HH0424M", "J0476M", "J0477M"]
+    assert [profile.reference_id for profile in profiles] == ["HH0312F", "HH0424M", "HH0428M", "HJ0285F", "J0476M", "J0477M"]
     assert all(profile.qc_benchmark.warning_threshold_mm == 0.736546216817878 for profile in profiles)
     if any(profile.missing_files() for profile in profiles):
         pytest.skip("Optional reference-data integration check requires the local data library.")

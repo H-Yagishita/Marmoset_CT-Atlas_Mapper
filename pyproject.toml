@@ -1,12 +1,14 @@
 [build-system]
-requires = ["setuptools>=75"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "marmoset-atlas-mapper"
-version = "0.1.0"
+version = "0.3.1"
 description = "Landmark-based mapping between marmoset CT and the Brain/MINDS BMA 2.0 atlas"
 requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "data/README.md"]
 dependencies = [
   "numpy==2.5.1",
   "SimpleITK==2.5.6",

@@ -6,7 +6,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 import SimpleITK as sitk
+from .native_io import read_image
 
 from .displacement_consensus import UncertaintyFields
 from .imaging import VolumeData
@@ -34,13 +36,42 @@ def _relative(root: Path, value: str) -> Path:
     return path if path.is_absolute() else root / path
 
 
+def _restore_registration(
+    summary: dict[str, str],
+    labels: tuple[str, ...],
+    residual_rows: list[dict[str, str]],
+) -> SimpleNamespace:
+    """Restore the registration fields used by the main window and QC dialog."""
+    residual_by_label = {row["Label"]: row for row in residual_rows}
+    distances = np.full(len(labels), np.nan, dtype=float)
+    vectors = np.full((len(labels), 3), np.nan, dtype=float)
+    for index, label in enumerate(labels):
+        row = residual_by_label.get(label)
+        if row is None:
+            continue
+        distances[index] = float(row["Residual_mm"])
+        vectors[index] = [float(row["dL_mm"]), float(row["dP_mm"]), float(row["dS_mm"])]
+    return SimpleNamespace(
+        labels=labels,
+        method=summary["Method"],
+        residual_distances=distances,
+        residual_vectors=vectors,
+        rms_mm=float(summary["FRE_RMS_mm"]),
+        mean_mm=float(summary["MeanResidual_mm"]),
+        maximum_mm=float(summary["MaximumResidual_mm"]),
+        uniform_scale=float(summary["UniformScale"]),
+    )
+
+
 def load_saved_qc_session(directory: str | Path) -> SavedQCSession:
     root = Path(directory)
     manifest_path = root / "Run_Manifest.json"
     if not manifest_path.is_file():
         raise FileNotFoundError(f"Run_Manifest.json was not found in {root}.")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if manifest.get("ReferenceCount") not in {1, 4}:
+    if str(manifest.get("RegistrationType", "")).startswith("General"):
+        raise ValueError("BRAINSFit results are no longer supported. Use the backed-up older application to open them.")
+    if manifest.get("ReferenceCount") not in {4, 6}:
         raise ValueError("The selected output is not a supported registration result.")
 
     viewer = manifest.get("QCViewer")
@@ -71,17 +102,19 @@ def load_saved_qc_session(directory: str | Path) -> SavedQCSession:
     )
 
     fre_by_reference = {row["ReferenceID"]: row for row in _read_csv(root / "QC" / "Landmark_FRE.csv")}
+    residual_path = root / "QC" / "Landmark_Residuals.csv"
+    residual_by_reference: dict[str, list[dict[str, str]]] = {}
+    if residual_path.is_file():
+        for row in _read_csv(residual_path):
+            residual_by_reference.setdefault(row["ReferenceID"], []).append(row)
     labels = tuple(str(manifest["LandmarkLabels"]).split(";"))
     routes = []
     for reference_id in sorted(warped):
         row = fre_by_reference[reference_id]
-        registration = SimpleNamespace(
-            labels=labels,
-            method=row["Method"],
-            rms_mm=float(row["FRE_RMS_mm"]),
-            mean_mm=float(row["MeanResidual_mm"]),
-            maximum_mm=float(row["MaximumResidual_mm"]),
-            uniform_scale=float(row["UniformScale"]),
+        registration = _restore_registration(
+            row,
+            labels,
+            residual_by_reference.get(reference_id, []),
         )
         routes.append(
             SimpleNamespace(
@@ -91,9 +124,9 @@ def load_saved_qc_session(directory: str | Path) -> SavedQCSession:
         )
 
     uncertainty = UncertaintyFields(
-        sitk.ReadImage(str(root / "Uncertainty" / "Uncertainty_RMS.nrrd")),
-        sitk.ReadImage(str(root / "Uncertainty" / "Uncertainty_Maximum.nrrd")),
-        sitk.ReadImage(str(root / "Uncertainty" / "Uncertainty_MaxPairwise.nrrd")),
+        read_image(root / "Uncertainty" / "Uncertainty_RMS.nrrd"),
+        read_image(root / "Uncertainty" / "Uncertainty_Maximum.nrrd"),
+        read_image(root / "Uncertainty" / "Uncertainty_MaxPairwise.nrrd"),
     )
     inverse_rows = _read_csv(root / "QC" / "Inverse_QC.csv")
     inverse_qc = None
@@ -120,7 +153,7 @@ def load_saved_qc_session(directory: str | Path) -> SavedQCSession:
             minimum_roundtrip_sample_count=int(row.get("MinimumRoundTripSampleCount", 30)),
         )
     result = SimpleNamespace(
-        registration_type=manifest.get("RegistrationType", "K04 multi-reference"),
+        registration_type=manifest.get("RegistrationType", f"Nref={len(routes)} multi-reference"),
         method=manifest["Method"],
         landmark_subset=SimpleNamespace(labels=labels),
         routes=tuple(routes),

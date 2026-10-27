@@ -1,0 +1,16 @@
+{
+  "metric": "MI",
+  "histogram_bins": 32,
+  "sampling_strategy": "Regular",
+  "sampling_fraction": 0.25,
+  "gradient_step": 0.1,
+  "iterations": "1000x500x250x100",
+  "convergence_threshold": "1e-6",
+  "convergence_window": 10,
+  "smoothing": "3x2x1x0vox",
+  "shrink": "8x4x2x1",
+  "winsorize": "[0.005,0.995]",
+  "float": true,
+  "random_seed": 20260918,
+  "threads_per_job": 4
+}

@@ -1,9 +1,14 @@
+import csv
 import json
 
 import numpy as np
 import pytest
 
-from marmoset_atlas_mapper.landmarks import load_slicer_markups, write_slicer_markups
+from marmoset_atlas_mapper.landmarks import (
+    load_slicer_markups,
+    write_landmark_csv,
+    write_slicer_markups,
+)
 
 
 def test_markups_round_trip_lps(tmp_path):
@@ -62,3 +67,25 @@ def test_duplicate_label_is_rejected_even_when_one_point_is_undefined(tmp_path):
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError, match="Duplicate"):
         load_slicer_markups(path)
+
+
+def test_landmark_csv_preserves_used_label_order_and_lps_coordinates(tmp_path):
+    path = tmp_path / "used.csv"
+    write_landmark_csv(
+        path,
+        {
+            "LM03": np.asarray([1.25, -2.5, 3.75]),
+            "LM01": np.asarray([-4.0, 5.0, 6.0]),
+        },
+    )
+
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert [row["Label"] for row in rows] == ["LM03", "LM01"]
+    assert rows[0] == {
+        "Label": "LM03",
+        "L_mm": "1.25",
+        "P_mm": "-2.5",
+        "S_mm": "3.75",
+    }

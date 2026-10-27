@@ -10,7 +10,9 @@ from types import SimpleNamespace
 
 import numpy as np
 import SimpleITK as sitk
+from .native_io import read_image, write_image
 from PySide6 import QtCore, QtGui, QtWidgets
+from . import __version__
 
 from .imaging import (
     VolumeData,
@@ -25,8 +27,9 @@ from .imaging import (
     save_registration_outputs,
 )
 from .image_resampling import resample_atlas_to_target
+from .io_manifest import write_json
 from .data_manager_dialog import ReferenceDataDialog, ensure_reference_data
-from .general_pipeline import run_general_registration
+from .ants_registration import REGISTRATION_TYPE as ANTS_REGISTRATION_TYPE
 from .landmarks import load_slicer_markups, write_slicer_markups
 from .multi_reference_pipeline import MultiReferenceResult, run_multi_reference_registration
 from .paths import bundled_asset_root
@@ -52,7 +55,7 @@ SKULL_ALL_LABELS = tuple(f"LM{index:02d}" for index in range(1, 14))
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("Marmoset Atlas Mapper")
+        self.setWindowTitle(f"Marmoset Atlas Mapper {__version__}")
         self.resize(1650, 930)
         self.profiles = load_profiles()
         self.reference_library = load_reference_library()
@@ -72,8 +75,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.warped_references: dict[str, VolumeData] = {}
         self.current_output_directory: Path | None = None
         self.qc_session = None
+        self._busy = False
+        self._restoring = False
+        self._workspace_timer = QtCore.QTimer(self)
+        self._workspace_timer.setSingleShot(True)
+        self._workspace_timer.setInterval(250)
+        self._workspace_timer.timeout.connect(self._write_workspace_state)
         self._setup_ui()
-        QtCore.QTimer.singleShot(0, self._load_profile)
+        QtCore.QTimer.singleShot(0, lambda: self._guard(self._load_profile, busy=True))
 
     def _setup_ui(self) -> None:
         central = QtWidgets.QWidget()
@@ -81,7 +90,7 @@ class MainWindow(QtWidgets.QMainWindow):
         root = QtWidgets.QVBoxLayout(central)
 
         toolbar = QtWidgets.QHBoxLayout()
-        toolbar.addWidget(QtWidgets.QLabel("Reference: <b>J0476M</b>"))
+        toolbar.addWidget(QtWidgets.QLabel(f"Display: <b>J0476M</b> | Library: <b>Nref={len(self.reference_library.references)}</b>"))
         toolbar.addSpacing(18)
         self.load_ct_button = QtWidgets.QPushButton("Load CT")
         self.load_ct_button.clicked.connect(self._load_user_ct)
@@ -106,7 +115,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.landmark_visibility_button.toggled.connect(self._toggle_landmarks)
         toolbar.addWidget(self.landmark_visibility_button)
         self.data_manager_button = QtWidgets.QPushButton("Reference Data")
-        self.data_manager_button.setToolTip("Download, import, or select the reference-data library.")
+        self.data_manager_button.setToolTip("Check the manually installed reference-data library.")
         self.data_manager_button.clicked.connect(self._open_data_manager)
         toolbar.addWidget(self.data_manager_button)
         toolbar.addStretch(1)
@@ -116,11 +125,14 @@ class MainWindow(QtWidgets.QMainWindow):
             "J0476M Reference CT", interactive=False, view_specs=J0476M_REFERENCE_VIEWS
         )
         self.user_panel = VolumePanel(
-            "Target CT — click a slice to place the selected landmark",
+            "Target CT",
             interactive=True,
             view_specs=UNLABELED_VIEWS,
+            window_level_controls=True,
         )
         self.user_panel.point_clicked.connect(self._place_selected_point)
+        self.user_panel.window_level_control.changed.connect(self._write_workspace_state)
+        self.user_panel.state_changed.connect(self._schedule_workspace_save)
         viewer_splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
         viewer_splitter.addWidget(self.reference_panel)
         viewer_splitter.addWidget(self.user_panel)
@@ -150,6 +162,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.log_dock.setWidget(self.log_output)
         self.log_dock.setMinimumHeight(115)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, self.log_dock)
+        self.menuBar().addMenu("View").addAction(self.log_dock.toggleViewAction())
+        self.log_dock.hide()
+        self.layer_combo.currentTextChanged.connect(self._schedule_workspace_save)
         self._log("Application started.")
 
     def _create_controls(self) -> QtWidgets.QWidget:
@@ -157,15 +172,14 @@ class MainWindow(QtWidgets.QMainWindow):
         panel.setMinimumWidth(310)
         layout = QtWidgets.QVBoxLayout(panel)
         instructions = QtWidgets.QLabel(
-            "Place at least 3 non-collinear landmarks. The reference views jump to the corresponding "
-            "reference landmark. More landmarks generally provide a more reliable registration."
+            "Select a landmark, then click the Target CT."
         )
         instructions.setWordWrap(True)
         instructions.setStyleSheet("padding: 8px; background: #edf4ff; color: #14233b;")
         layout.addWidget(instructions)
 
-        self.landmark_table = QtWidgets.QTableWidget(len(SKULL_BASE_LABELS), 3)
-        self.landmark_table.setHorizontalHeaderLabels(["Landmark", "Status", "Residual"])
+        self.landmark_table = QtWidgets.QTableWidget(len(SKULL_BASE_LABELS), 2)
+        self.landmark_table.setHorizontalHeaderLabels(["Landmark", "Status"])
         self.landmark_table.verticalHeader().setVisible(False)
         self.landmark_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.landmark_table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
@@ -187,7 +201,7 @@ class MainWindow(QtWidgets.QMainWindow):
         type_row.addWidget(QtWidgets.QLabel("Registration type:"))
         self.registration_type_combo = QtWidgets.QComboBox()
         self.registration_type_combo.addItems(
-            ["Landmark (Skull-base)", "Landmark (Skull-all)", "General (BRAINSFit)"]
+            ["Landmark (Skull-base)", "Landmark (Skull-all)", ANTS_REGISTRATION_TYPE]
         )
         self.registration_type_combo.currentTextChanged.connect(self._registration_type_changed)
         type_row.addWidget(self.registration_type_combo, 1)
@@ -226,9 +240,9 @@ class MainWindow(QtWidgets.QMainWindow):
         information_layout = QtWidgets.QVBoxLayout(information_group)
         information = QtWidgets.QLabel(
             "<b>Brain/MINDS Marmoset Brain Atlas 2.0</b><br>"
-            "License: CC BY 4.0<br>"
+            "Atlas license: CC BY 4.0<br>"
             "<a href='https://doi.org/10.6084/m9.figshare.29992687'>Atlas dataset and citation</a><br><br>"
-            "<b>Marmoset Atlas Mapper</b><br>Software/paper citation: forthcoming"
+            f"<b>Marmoset Atlas Mapper v{__version__}</b>"
         )
         information.setWordWrap(True)
         information.setOpenExternalLinks(True)
@@ -245,7 +259,12 @@ class MainWindow(QtWidgets.QMainWindow):
         scrollbar = self.log_output.verticalScrollBar()
         scrollbar.setValue(scrollbar.maximum())
 
-    def _guard(self, action) -> None:
+    def _guard(self, action, *, busy: bool = False) -> None:
+        if busy and self._busy:
+            return
+        if busy:
+            self._busy = True
+            self.centralWidget().setEnabled(False)
         try:
             action()
         except Exception as exc:
@@ -253,6 +272,22 @@ class MainWindow(QtWidgets.QMainWindow):
             self._log(f"{exc}\n{traceback.format_exc().rstrip()}", "ERROR")
             QtWidgets.QMessageBox.critical(self, "Marmoset Atlas Mapper", f"{exc}")
             self.status.showMessage(f"Error: {exc}")
+        finally:
+            if busy:
+                self._busy = False
+                self.centralWidget().setEnabled(True)
+
+    def closeEvent(self, event) -> None:
+        if self._busy:
+            event.ignore()
+            self.status.showMessage("Please wait until processing has finished before closing.")
+            return
+        self._write_workspace_state()
+        super().closeEvent(event)
+
+    def _schedule_workspace_save(self, *_args) -> None:
+        if not self._restoring:
+            self._workspace_timer.start()
 
     def _method_changed(self, method: str) -> None:
         if not hasattr(self, "register_button"):
@@ -281,6 +316,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reference_panel.set_points_visible(visible)
         self.user_panel.set_points_visible(visible)
         self.landmark_visibility_button.setText(f"Landmarks: {'ON' if visible else 'OFF'}")
+        self._schedule_workspace_save()
 
     def _load_profile(self) -> None:
         missing = self.profile.missing_files()
@@ -332,6 +368,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 QtWidgets.QApplication.restoreOverrideCursor()
             self.user_panel.set_volume(self.user_volume)
             self.user_points.clear()
+            self.user_panel.set_points({}, self.selected_label)
             self._invalidate_registration()
             self._refresh_landmark_table()
             self.register_button.setEnabled(False)
@@ -341,7 +378,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 f"spacing={tuple(round(v, 6) for v in self.user_volume.display_image.GetSpacing())}."
             )
 
-        self._guard(action)
+        self._guard(action, busy=True)
 
     def _import_user_markups(self) -> None:
         if self.user_volume is None:
@@ -353,9 +390,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def action() -> None:
             imported = load_slicer_markups(path)
-            self.user_points = {
+            points = {
                 label: imported[label] for label in SKULL_ALL_LABELS if label in imported
             }
+            if not points:
+                raise ValueError("No defined LM01–LM13 landmarks were found. Existing landmarks were preserved.")
+            self.user_points = points
             self._invalidate_registration()
             self._refresh_landmark_table()
             self.user_panel.set_points(self.user_points, self.selected_label)
@@ -387,62 +427,70 @@ class MainWindow(QtWidgets.QMainWindow):
             manifest = json.loads((Path(directory) / "Run_Manifest.json").read_text(encoding="utf-8"))
             registration_type = manifest.get("RegistrationType")
             if registration_type not in {
-                "Landmark (Skull-base)", "Landmark (Skull-all)", "General (BRAINSFit)"
+                "Landmark (Skull-base)", "Landmark (Skull-all)", ANTS_REGISTRATION_TYPE
             }:
                 registration_type = (
                     "Landmark (Skull-base)"
                     if int(manifest.get("LandmarkCount", 0)) <= 8
                     else "Landmark (Skull-all)"
                 )
-            self.registration_type_combo.setCurrentText(registration_type)
-            self.method_combo.setCurrentText(str(manifest.get("Method", "Rigid")))
-            self.user_volume = session.target
-            self.user_points = {
+            workspace = manifest.get("Workspace", {})
+            points = {
                 label: np.asarray(point, dtype=float)
-                for label, point in manifest.get("TargetLandmarks", {}).items()
+                for label, point in workspace.get("TargetLandmarks", manifest.get("TargetLandmarks", {})).items()
                 if label in SKULL_ALL_LABELS
             }
-            self.user_panel.set_volume(self.user_volume)
-            workspace = manifest.get("Workspace", {})
-            restored_label = workspace.get("SelectedLandmark")
-            if restored_label in self.registration_labels:
-                self.selected_label = restored_label
-            self.user_panel.set_points(self.user_points, self.selected_label)
+            if any(point.shape != (3,) or not np.isfinite(point).all() for point in points.values()):
+                raise ValueError("Saved workspace contains invalid landmark coordinates.")
+            contrast = workspace.get("TargetWindowLevel", {})
+            if "Window" in contrast and "Level" in contrast:
+                session.target.set_window_level(float(contrast["Window"]), float(contrast["Level"]))
             restored_index = workspace.get("TargetViewIndexXYZ")
-            if isinstance(restored_index, list) and len(restored_index) == 3:
-                self.user_panel.index_xyz = np.asarray(restored_index, dtype=float)
-                self.user_panel.refresh()
-            visible = bool(workspace.get("LandmarksVisible", True))
-            self.landmark_visibility_button.setChecked(visible)
-            restored_layer = workspace.get("AtlasLayer")
-            if restored_layer:
-                self.layer_combo.setCurrentText(restored_layer)
-            self.warped_references = session.warped_references
-            self.registration_result = next(
-                (
-                    route.registration
-                    for route in session.result.routes
-                    if route.reference.reference_id == "J0476M"
-                ),
-                session.result.routes[0].registration if session.result.routes else None,
-            )
-            self.qc_session = session
-            self.current_output_directory = Path(directory).resolve()
-            forward_path = self.current_output_directory / "Target_CT_to_BMA_MultiRef_K04_Forward.h5"
+            if restored_index is not None:
+                restored_index = np.asarray(restored_index, dtype=float)
+                if restored_index.shape != (3,) or not np.isfinite(restored_index).all():
+                    raise ValueError("Saved workspace contains an invalid slice position.")
+            automatic = manifest.get("ForwardTransform") or manifest.get("ConsensusForwardTransform")
+            candidate = Path(automatic) if automatic else Path("Target_CT_to_BMA_MultiRef_K04_Forward.h5")  # legacy results
+            forward_path = Path(directory) / candidate.name if candidate.is_absolute() else Path(directory) / candidate
             if not forward_path.is_file():
-                automatic = manifest.get("ForwardTransform") or manifest.get("ConsensusForwardTransform")
-                if automatic:
-                    candidate = Path(automatic)
-                    forward_path = candidate if candidate.is_absolute() else self.current_output_directory / candidate
-            self.user_to_atlas = read_transform(forward_path) if forward_path.is_file() else None
-            self.qc_button.setEnabled(True)
-            self.atlas_viewer_button.setEnabled(True)
-            self.save_results_button.setEnabled(True)
-            self._refresh_landmark_table()
+                raise FileNotFoundError(f"Saved forward transform is missing: {forward_path}")
+            forward = read_transform(forward_path)
+            # Validate everything before replacing the current workspace. Block
+            # settings callbacks so opening B cannot save B's settings into A.
+            self._restoring = True
+            try:
+                self._invalidate_registration()
+                self.registration_type_combo.setCurrentText(registration_type)
+                self.method_combo.setCurrentText(str(manifest.get("Method", "Rigid")))
+                self.user_volume = session.target
+                self.user_points = points
+                self.user_panel.set_volume(self.user_volume)
+                label = workspace.get("SelectedLandmark", self.registration_labels[0])
+                self._select_landmark(label if label in self.registration_labels else self.registration_labels[0])
+                if restored_index is not None:
+                    self.user_panel.index_xyz = np.clip(restored_index, 0, np.array(self.user_volume.display_image.GetSize()) - 1)
+                    self.user_panel.refresh()
+                self.landmark_visibility_button.setChecked(bool(workspace.get("LandmarksVisible", True)))
+                self.layer_combo.setCurrentText(workspace.get("AtlasLayer", self.layer_combo.itemText(0)))
+                self.warped_references = session.warped_references
+                self.registration_result = next(
+                    (route.registration for route in session.result.routes if route.reference.reference_id == "J0476M"),
+                    session.result.routes[0].registration if session.result.routes else None)
+                self.warped_reference = self.warped_references.get("J0476M")
+                self.qc_session = session
+                self.current_output_directory = Path(directory).resolve()
+                self.user_to_atlas = forward
+                self.qc_button.setEnabled(True)
+                self.atlas_viewer_button.setEnabled(True)
+                self.save_results_button.setEnabled(True)
+                self._refresh_landmark_table()
+            finally:
+                self._restoring = False
             self._log(f"Restored saved registration workspace without recomputation: {directory}.")
             self.status.showMessage(f"Restored results: {directory}")
 
-        self._guard(action)
+        self._guard(action, busy=True)
 
     def _landmark_selection_changed(self) -> None:
         rows = self.landmark_table.selectionModel().selectedRows()
@@ -465,6 +513,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.user_panel.set_points(self.user_points, label)
         if label in self.user_points:
             self.user_panel.jump_to_physical(self.user_points[label])
+        self._schedule_workspace_save()
 
     def _place_selected_point(self, point_lps: np.ndarray) -> None:
         if self.user_volume is None:
@@ -495,6 +544,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._refresh_landmark_table()
 
     def _invalidate_registration(self) -> None:
+        self._workspace_timer.stop()
         self.registration_result = None
         self.warped_reference = None
         self.user_to_atlas = None
@@ -513,11 +563,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.landmark_table.setRowCount(len(self.registration_labels))
         for row, label in enumerate(self.registration_labels):
             status = "Placed" if label in self.user_points else "Missing"
-            residual = ""
-            if self.registration_result is not None and label in self.registration_result.labels:
-                index = self.registration_result.labels.index(label)
-                residual = f"{self.registration_result.residual_distances[index]:.3f} mm"
-            for column, value in enumerate((label, status, residual)):
+            for column, value in enumerate((label, status)):
                 item = QtWidgets.QTableWidgetItem(value)
                 if column == 1:
                     item.setForeground(QtGui.QColor("#198754") if status == "Placed" else QtGui.QColor("#c0392b"))
@@ -526,6 +572,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.register_button.setEnabled(ready)
 
     def _run_registration(self) -> None:
+        if self._busy:
+            return
         if self.user_volume is None:
             QtWidgets.QMessageBox.information(self, "Marmoset Atlas Mapper", "Load a User CT first.")
             return
@@ -535,6 +583,10 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         if not output_directory:
             return
+        # Preserve earlier results and failed-run diagnostics rather than mixing
+        # files from different runs (especially old inverse outputs).
+        if any(Path(output_directory).iterdir()):
+            output_directory = str(Path(output_directory) / datetime.now().strftime("Run_%Y%m%d_%H%M%S_%f"))
 
         def action() -> None:
             labels = self._active_labels()
@@ -542,6 +594,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 raise RuntimeError("At least 3 non-collinear landmarks are required.")
             method = self.method_combo.currentText()
             registration_type = self.registration_type_combo.currentText()
+            self._invalidate_registration()
             self._log(
                 f"Starting {registration_type}, {method}, with "
                 f"{len(labels)} requested landmarks: {', '.join(labels)}."
@@ -555,31 +608,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
             QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.CursorShape.WaitCursor)
             try:
-                if registration_type == "General (BRAINSFit)":
-                    self.multi_result = run_general_registration(
-                        target_ct_path=self.user_volume.source_path,
-                        target_landmarks=self.user_points,
-                        requested_labels=labels,
-                        method=method,
-                        library=self.reference_library,
-                        output_directory=output_directory,
-                        progress=progress,
-                    )
-                else:
-                    self.multi_result = run_multi_reference_registration(
-                        target_ct_path=self.user_volume.source_path,
-                        target_landmarks=self.user_points,
-                        requested_labels=labels,
-                        method=method,
-                        library=self.reference_library,
-                        output_directory=output_directory,
-                        progress=progress,
-                        registration_type=registration_type,
-                    )
+                self.multi_result = run_multi_reference_registration(
+                    target_ct_path=self.user_volume.source_path,
+                    target_landmarks=self.user_points,
+                    requested_labels=labels,
+                    method=method,
+                    library=self.reference_library,
+                    output_directory=output_directory,
+                    progress=progress,
+                    registration_type=registration_type,
+                )
                 self.user_to_atlas = self.multi_result.consensus_transform
                 self.warped_references = {}
                 for route in self.multi_result.routes:
-                    reference_image = sitk.ReadImage(str(route.reference.ct_path))
+                    reference_image = read_image(route.reference.ct_path)
                     warped = resample_reference_into_user(
                         reference_image,
                         self.user_volume.image,
@@ -626,38 +668,47 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             self._show_qc()
 
-        self._guard(action)
+        self._guard(action, busy=True)
 
     def _write_workspace_state(self) -> None:
-        if self.current_output_directory is None:
+        if self.current_output_directory is None or self._restoring:
             return
         manifest_path = self.current_output_directory / "Run_Manifest.json"
         if not manifest_path.is_file():
             return
+        try:
+            self._save_workspace_to_manifest(manifest_path)
+        except (OSError, ValueError) as exc:
+            self._log(f"Could not save viewer settings (result data unchanged): {exc}", "WARN")
+
+    def _save_workspace_to_manifest(self, manifest_path: Path) -> None:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         manifest["Workspace"] = {
             "SelectedLandmark": self.selected_label,
             "TargetViewIndexXYZ": self.user_panel.index_xyz.tolist(),
             "LandmarksVisible": self.landmark_visibility_button.isChecked(),
             "AtlasLayer": self.layer_combo.currentText(),
+            "TargetLandmarks": {label: np.asarray(point).tolist() for label, point in self.user_points.items()},
+            "TargetWindowLevel": {"Window": self.user_volume.window, "Level": self.user_volume.level}
+            if self.user_volume is not None else {},
         }
-        manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        write_json(manifest_path, manifest)
 
     def _show_qc(self) -> None:
         if self.qc_session is None:
             return
-        MultiReferenceQualityCheckDialog(
+        self._guard(lambda: MultiReferenceQualityCheckDialog(
             self,
             self.qc_session.target,
             self.qc_session.atlas_in_target,
             self.qc_session.warped_references,
             self.qc_session.result,
             self.qc_session.center_lps,
-        ).exec()
+        ).exec())
 
     def _get_user_to_atlas(self) -> sitk.Transform:
-        if self.multi_result is None or self.user_to_atlas is None:
-            raise RuntimeError("Run K04 multi-reference consensus first.")
+        if self.user_to_atlas is None:
+            raise RuntimeError("Run multi-reference consensus first.")
         return self.user_to_atlas
 
     def _get_atlas_to_user(self) -> sitk.CompositeTransform:
@@ -696,14 +747,14 @@ class MainWindow(QtWidgets.QMainWindow):
         def action() -> None:
             QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.CursorShape.WaitCursor)
             try:
-                atlas_image = sitk.ReadImage(str(layer.path))
+                atlas_image = read_image(layer.path)
                 mapped = resample_atlas_to_target(
                     atlas_image,
                     self.user_volume.image,
                     self._get_user_to_atlas(),
                     layer.interpolation,
                 )
-                sitk.WriteImage(mapped, destination, True)
+                write_image(mapped, destination, True)
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
             self.status.showMessage(f"Saved {layer.name} in User CT space: {destination}")
@@ -725,8 +776,10 @@ class MainWindow(QtWidgets.QMainWindow):
             points = load_slicer_markups(source)
             mapped = map_points_to_atlas(points, self._get_user_to_atlas())
             write_slicer_markups(destination, mapped, name="BMA2")
-            csv_path = Path(destination).with_name(Path(destination).name.replace(".mrk.json", ".csv"))
-            label_image = sitk.ReadImage(str(self.reference_library.atlas_label_map))
+            csv_path = Path(destination).with_suffix(".csv")
+            if Path(destination).name.endswith(".mrk.json"):
+                csv_path = Path(destination).with_name(Path(destination).name[:-9] + ".csv")
+            label_image = read_image(self.reference_library.atlas_label_map)
             names = read_color_table(self.reference_library.atlas_color_table)
             with csv_path.open("w", newline="", encoding="utf-8-sig") as handle:
                 writer = csv.writer(handle)
@@ -753,7 +806,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 path = Path(value)
                 if not path.is_absolute():
                     path = self.current_output_directory / path
-                image = sitk.ReadImage(str(path))
+                image = read_image(path)
                 if image.GetNumberOfComponentsPerPixel() > 1:
                     image = sitk.VectorMagnitude(sitk.Cast(image, sitk.sitkVectorFloat32))
                 layers[name] = VolumeData.from_image(image, path)
@@ -780,14 +833,13 @@ class MainWindow(QtWidgets.QMainWindow):
         QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(str(self.current_output_directory)))
 
     def _open_data_manager(self) -> None:
-        dialog = ReferenceDataDialog(self, require_complete=False)
-        dialog.exec()
-        if dialog.data_ready:
-            QtWidgets.QMessageBox.information(
-                self,
-                "Reference Data",
-                "The data folder is complete and ready to use.",
-            )
+        def action():
+            dialog = ReferenceDataDialog(self, require_complete=False)
+            dialog.exec()
+            if dialog.data_ready:
+                QtWidgets.QMessageBox.information(
+                    self, "Reference Data", "The data folder is complete and ready to use.")
+        self._guard(action)
 
 
 def run() -> int:

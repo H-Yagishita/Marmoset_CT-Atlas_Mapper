@@ -5,6 +5,7 @@ from typing import Iterable, Mapping
 
 import numpy as np
 import SimpleITK as sitk
+from .native_io import write_image
 
 from .imaging import normalize_to_uint8, resample_reference_into_user
 
@@ -64,7 +65,7 @@ def _write_aspect_correct_png(rgb: np.ndarray, spacing_xy: tuple[float, float], 
         0,
         sitk.sitkVectorUInt8,
     )
-    sitk.WriteImage(resized, str(path))
+    write_image(resized, path)
 
 
 def write_overlay_triplet(
