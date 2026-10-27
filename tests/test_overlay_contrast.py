@@ -119,7 +119,7 @@ def test_qc_failures_remain_visible(forward, inverse):
     assert f"Forward QC: {'PASS' if forward else 'FAIL'}" in dialog.summary.text()
     assert "Inverse QC: FAIL" in dialog.summary.text()
     warning = dialog.findChild(QtWidgets.QLabel, "qc_output_warning")
-    assert warning is not None and "not generated" in warning.text()
+    assert warning is not None and "was not saved" in warning.text()
     dialog.close()
     dialog.deleteLater()
     app.processEvents()

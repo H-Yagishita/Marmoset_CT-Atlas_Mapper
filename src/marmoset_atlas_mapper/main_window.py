@@ -37,6 +37,7 @@ from .profile import AtlasLayer, AtlasProfile, load_profiles
 from .reference_library import AtlasLayer as LibraryAtlasLayer
 from .reference_library import load_reference_library
 from .registration import RegistrationResult, register_landmarks
+from .registration_modes import normalize_registration_type
 from .saved_qc import load_saved_qc_session
 from .transform_io import read_transform
 from .widgets import (
@@ -90,22 +91,22 @@ class MainWindow(QtWidgets.QMainWindow):
         root = QtWidgets.QVBoxLayout(central)
 
         toolbar = QtWidgets.QHBoxLayout()
-        toolbar.addWidget(QtWidgets.QLabel(f"Display: <b>J0476M</b> | Library: <b>Nref={len(self.reference_library.references)}</b>"))
+        toolbar.addWidget(QtWidgets.QLabel(f"Preview: <b>J0476M</b> | <b>Nref = {len(self.reference_library.references)}</b>"))
         toolbar.addSpacing(18)
         self.load_ct_button = QtWidgets.QPushButton("Load CT")
         self.load_ct_button.clicked.connect(self._load_user_ct)
         toolbar.addWidget(self.load_ct_button)
-        self.import_button = QtWidgets.QPushButton("Import Landmarks")
+        self.import_button = QtWidgets.QPushButton("Import landmarks")
         self.import_button.clicked.connect(self._import_user_markups)
         toolbar.addWidget(self.import_button)
-        self.save_markups_button = QtWidgets.QPushButton("Save Landmarks")
+        self.save_markups_button = QtWidgets.QPushButton("Save landmarks")
         self.save_markups_button.clicked.connect(self._save_user_markups)
         toolbar.addWidget(self.save_markups_button)
         self.open_saved_qc_button = QtWidgets.QPushButton("Open results")
-        self.open_saved_qc_button.setToolTip("Restore a previous registration workspace without recomputing registration.")
+        self.open_saved_qc_button.setToolTip("Reopen a saved run without repeating registration.")
         self.open_saved_qc_button.clicked.connect(self._open_saved_qc)
         toolbar.addWidget(self.open_saved_qc_button)
-        self.save_results_button = QtWidgets.QPushButton("Open Folder")
+        self.save_results_button = QtWidgets.QPushButton("Open output folder")
         self.save_results_button.setEnabled(False)
         self.save_results_button.clicked.connect(self._save_results)
         toolbar.addWidget(self.save_results_button)
@@ -114,15 +115,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.landmark_visibility_button.setChecked(True)
         self.landmark_visibility_button.toggled.connect(self._toggle_landmarks)
         toolbar.addWidget(self.landmark_visibility_button)
-        self.data_manager_button = QtWidgets.QPushButton("Reference Data")
-        self.data_manager_button.setToolTip("Check the manually installed reference-data library.")
+        self.data_manager_button = QtWidgets.QPushButton("Reference data")
+        self.data_manager_button.setToolTip("Check the reference images, landmarks, and transforms.")
         self.data_manager_button.clicked.connect(self._open_data_manager)
         toolbar.addWidget(self.data_manager_button)
         toolbar.addStretch(1)
         root.addLayout(toolbar)
 
         self.reference_panel = VolumePanel(
-            "J0476M Reference CT", interactive=False, view_specs=J0476M_REFERENCE_VIEWS
+            "Reference CT: J0476M", interactive=False, view_specs=J0476M_REFERENCE_VIEWS
         )
         self.user_panel = VolumePanel(
             "Target CT",
@@ -147,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.status = QtWidgets.QStatusBar()
         self.setStatusBar(self.status)
-        self.status.showMessage("Loading reference profile…")
+        self.status.showMessage("Loading reference CT…")
 
         self.log_output = QtWidgets.QPlainTextEdit()
         self.log_output.setReadOnly(True)
@@ -172,7 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
         panel.setMinimumWidth(310)
         layout = QtWidgets.QVBoxLayout(panel)
         instructions = QtWidgets.QLabel(
-            "Select a landmark, then click the Target CT."
+            "Select a landmark, then click its position in the target CT."
         )
         instructions.setWordWrap(True)
         instructions.setStyleSheet("padding: 8px; background: #edf4ff; color: #14233b;")
@@ -189,9 +190,9 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.landmark_table)
 
         point_buttons = QtWidgets.QHBoxLayout()
-        clear_selected = QtWidgets.QPushButton("Clear (selected)")
+        clear_selected = QtWidgets.QPushButton("Clear selected")
         clear_selected.clicked.connect(self._clear_selected)
-        clear_all = QtWidgets.QPushButton("Clear (all)")
+        clear_all = QtWidgets.QPushButton("Clear all")
         clear_all.clicked.connect(self._clear_all)
         point_buttons.addWidget(clear_selected)
         point_buttons.addWidget(clear_all)
@@ -201,14 +202,14 @@ class MainWindow(QtWidgets.QMainWindow):
         type_row.addWidget(QtWidgets.QLabel("Registration type:"))
         self.registration_type_combo = QtWidgets.QComboBox()
         self.registration_type_combo.addItems(
-            ["Landmark (Skull-base)", "Landmark (Skull-all)", ANTS_REGISTRATION_TYPE]
+            ["Landmarks (skull base)", "Landmarks (total)", ANTS_REGISTRATION_TYPE]
         )
         self.registration_type_combo.currentTextChanged.connect(self._registration_type_changed)
         type_row.addWidget(self.registration_type_combo, 1)
         layout.addLayout(type_row)
 
         transform_row = QtWidgets.QHBoxLayout()
-        transform_row.addWidget(QtWidgets.QLabel("Transform method:"))
+        transform_row.addWidget(QtWidgets.QLabel("Transform:"))
         self.method_combo = QtWidgets.QComboBox()
         self.method_combo.addItems(["Rigid", "Similarity"])
         self.method_combo.currentTextChanged.connect(self._method_changed)
@@ -220,17 +221,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.register_button.setEnabled(False)
         self.register_button.clicked.connect(self._run_registration)
         layout.addWidget(self.register_button)
-        self.qc_button = QtWidgets.QPushButton("Open Quality Check")
+        self.qc_button = QtWidgets.QPushButton("Open quality check")
         self.qc_button.setEnabled(False)
         self.qc_button.clicked.connect(self._show_qc)
         layout.addWidget(self.qc_button)
 
         viewer_group = QtWidgets.QGroupBox("Atlas viewer")
         mapping_layout = QtWidgets.QVBoxLayout(viewer_group)
-        mapping_layout.addWidget(QtWidgets.QLabel("Atlas image layer:"))
+        mapping_layout.addWidget(QtWidgets.QLabel("Atlas layer:"))
         self.layer_combo = QtWidgets.QComboBox()
         mapping_layout.addWidget(self.layer_combo)
-        self.atlas_viewer_button = QtWidgets.QPushButton("Open Atlas Viewer")
+        self.atlas_viewer_button = QtWidgets.QPushButton("Open atlas viewer")
         self.atlas_viewer_button.setEnabled(False)
         self.atlas_viewer_button.clicked.connect(self._open_atlas_viewer)
         mapping_layout.addWidget(self.atlas_viewer_button)
@@ -298,7 +299,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @property
     def registration_labels(self) -> tuple[str, ...]:
-        if self.registration_type_combo.currentText() == "Landmark (Skull-base)":
+        if self.registration_type_combo.currentText() == "Landmarks (skull base)":
             return SKULL_BASE_LABELS
         return SKULL_ALL_LABELS
 
@@ -353,7 +354,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _load_user_ct(self) -> None:
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self,
-            "Load User CT",
+            "Load target CT",
             "",
             "Medical image (*.nii *.nii.gz *.nrrd *.nhdr);;All files (*)",
         )
@@ -372,9 +373,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self._invalidate_registration()
             self._refresh_landmark_table()
             self.register_button.setEnabled(False)
-            self.status.showMessage(f"Loaded User CT: {path}")
+            self.status.showMessage(f"Loaded target CT: {path}")
             self._log(
-                f"Loaded User CT: {path}; size={self.user_volume.display_image.GetSize()}, "
+                f"Loaded target CT: {path}; size={self.user_volume.display_image.GetSize()}, "
                 f"spacing={tuple(round(v, 6) for v in self.user_volume.display_image.GetSpacing())}."
             )
 
@@ -382,9 +383,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _import_user_markups(self) -> None:
         if self.user_volume is None:
-            QtWidgets.QMessageBox.information(self, "Marmoset Atlas Mapper", "Load a User CT first.")
+            QtWidgets.QMessageBox.information(self, "Marmoset Atlas Mapper", "Load a target CT first.")
             return
-        path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import User CT Markups", "", "Slicer Markups (*.mrk.json);;JSON (*.json)")
+        path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Import target landmarks", "", "Slicer Markups (*.mrk.json);;JSON (*.json)")
         if not path:
             return
 
@@ -394,7 +395,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 label: imported[label] for label in SKULL_ALL_LABELS if label in imported
             }
             if not points:
-                raise ValueError("No defined LM01–LM13 landmarks were found. Existing landmarks were preserved.")
+                raise ValueError("No placed points labeled LM01–LM13 were found. Your current landmarks have not been changed.")
             self.user_points = points
             self._invalidate_registration()
             self._refresh_landmark_table()
@@ -409,7 +410,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _save_user_markups(self) -> None:
         if not self.user_points:
             return
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save User CT Markups", "UserCT_Landmarks.mrk.json", "Slicer Markups (*.mrk.json)")
+        path, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save target landmarks", "TargetCT_Landmarks.mrk.json", "Slicer Markups (*.mrk.json)")
         if path:
             self._guard(lambda: write_slicer_markups(path, self.user_points))
 
@@ -425,14 +426,14 @@ class MainWindow(QtWidgets.QMainWindow):
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
             manifest = json.loads((Path(directory) / "Run_Manifest.json").read_text(encoding="utf-8"))
-            registration_type = manifest.get("RegistrationType")
+            registration_type = normalize_registration_type(manifest.get("RegistrationType"))
             if registration_type not in {
-                "Landmark (Skull-base)", "Landmark (Skull-all)", ANTS_REGISTRATION_TYPE
+                "Landmarks (skull base)", "Landmarks (total)", ANTS_REGISTRATION_TYPE
             }:
                 registration_type = (
-                    "Landmark (Skull-base)"
+                    "Landmarks (skull base)"
                     if int(manifest.get("LandmarkCount", 0)) <= 8
-                    else "Landmark (Skull-all)"
+                    else "Landmarks (total)"
                 )
             workspace = manifest.get("Workspace", {})
             points = {
@@ -536,7 +537,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._refresh_landmark_table()
 
     def _clear_all(self) -> None:
-        if self.user_points and QtWidgets.QMessageBox.question(self, "Clear all", "Clear all User CT landmarks?") != QtWidgets.QMessageBox.StandardButton.Yes:
+        if self.user_points and QtWidgets.QMessageBox.question(self, "Clear all", "Clear all landmarks on the target CT?") != QtWidgets.QMessageBox.StandardButton.Yes:
             return
         self.user_points.clear()
         self._invalidate_registration()
@@ -575,7 +576,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._busy:
             return
         if self.user_volume is None:
-            QtWidgets.QMessageBox.information(self, "Marmoset Atlas Mapper", "Load a User CT first.")
+            QtWidgets.QMessageBox.information(self, "Marmoset Atlas Mapper", "Load a target CT first.")
             return
         output_directory = QtWidgets.QFileDialog.getExistingDirectory(
             self,
@@ -664,7 +665,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self._refresh_landmark_table()
             self.status.showMessage(f"{registration_type}, {method} completed: {output_directory}")
             self._log(
-                f"{registration_type} completed. Default image, landmark, transform, and QC outputs were generated."
+                f"{registration_type} completed. Images, landmarks, transforms, and QC reports have been saved."
             )
             self._show_qc()
 
@@ -708,13 +709,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _get_user_to_atlas(self) -> sitk.Transform:
         if self.user_to_atlas is None:
-            raise RuntimeError("Run multi-reference consensus first.")
+            raise RuntimeError("Run registration or open saved results first.")
         return self.user_to_atlas
 
     def _get_atlas_to_user(self) -> sitk.CompositeTransform:
         raise RuntimeError(
-            "A robust inverse consensus field has not been generated. "
-            "The primary implementation intentionally provides forward Target CT → BMA mapping only."
+            "No inverse transform is available for this operation. "
+            "Check the saved inverse QC report for details."
         )
 
     def _selected_layer(self) -> LibraryAtlasLayer:
@@ -730,8 +731,8 @@ class MainWindow(QtWidgets.QMainWindow):
         QtWidgets.QApplication.clipboard().setText(str(path))
         QtWidgets.QMessageBox.information(
             self,
-            "3A output",
-            f"The inverse passed QC and the Target CT was automatically resampled into BMA 2.0 geometry.\n\n"
+            "Target CT in atlas space",
+            f"The inverse transform passed QC. The target CT has been saved in BMA 2.0 space.\n\n"
             f"{path}\n\nThe path has been copied to the clipboard.",
         )
 
@@ -740,7 +741,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         layer = self._selected_layer()
         default_name = layer.path.name.replace(".nii.gz", "") + "_in_UserCT.nii.gz"
-        destination, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Atlas layer in User CT space", default_name, "NIfTI (*.nii.gz *.nii);;NRRD (*.nrrd)")
+        destination, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save atlas layer in target CT space", default_name, "NIfTI (*.nii.gz *.nii);;NRRD (*.nrrd)")
         if not destination:
             return
 
@@ -757,8 +758,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 write_image(mapped, destination, True)
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
-            self.status.showMessage(f"Saved {layer.name} in User CT space: {destination}")
-            self._log(f"Saved {layer.name} in User CT space: {destination}.")
+            self.status.showMessage(f"Saved {layer.name} in target CT space: {destination}")
+            self._log(f"Saved {layer.name} in target CT space: {destination}.")
             QtWidgets.QMessageBox.information(self, "Mapping completed", f"Saved:\n{destination}")
 
         self._guard(action)
@@ -838,7 +839,7 @@ class MainWindow(QtWidgets.QMainWindow):
             dialog.exec()
             if dialog.data_ready:
                 QtWidgets.QMessageBox.information(
-                    self, "Reference Data", "The data folder is complete and ready to use.")
+                    self, "Reference data", "The data folder is complete and ready to use.")
         self._guard(action)
 
 

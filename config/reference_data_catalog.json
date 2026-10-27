@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "dataset_id": "bma2-manuscript-nref6-reference-library",
-  "display_name": "BMA 2.0 / Nref=6 Marmoset CT Reference Library",
+  "display_name": "BMA 2.0 atlas and six-marmoset reference library",
   "version": "2.0.0",
   "landing_page_url": "",
-  "license_summary": "BMA 2.0: CC BY 4.0. Reference-data redistribution permission must be confirmed before publication.",
+  "license_summary": "Reference images, landmarks, and transforms: MIT. BMA 2.0 atlas: CC BY 4.0. See data/README.md for attribution and license details.",
   "package": {
-    "filename": "MarmosetAtlasMapper_v0.3.2_Windows_Complete.zip",
+    "filename": "MarmosetAtlasMapper_v1.00_Windows_Complete.zip",
     "sha256": "",
     "size_bytes": null
   },

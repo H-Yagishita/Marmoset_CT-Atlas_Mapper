@@ -14,6 +14,7 @@ from .displacement_consensus import UncertaintyFields
 from .imaging import VolumeData
 from .robust_inverse import InverseQCReport
 from .transform_qc import ErrorStatistics
+from .registration_modes import normalize_registration_type
 
 
 @dataclass(frozen=True)
@@ -153,7 +154,7 @@ def load_saved_qc_session(directory: str | Path) -> SavedQCSession:
             minimum_roundtrip_sample_count=int(row.get("MinimumRoundTripSampleCount", 30)),
         )
     result = SimpleNamespace(
-        registration_type=manifest.get("RegistrationType", f"Nref={len(routes)} multi-reference"),
+        registration_type=normalize_registration_type(manifest.get("RegistrationType", f"Nref={len(routes)} multi-reference")),
         method=manifest["Method"],
         landmark_subset=SimpleNamespace(labels=labels),
         routes=tuple(routes),

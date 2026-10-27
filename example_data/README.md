@@ -1,9 +1,10 @@
 # Example data
 
-Public-release example data are intentionally not bundled yet. Before the
-software repository is published, place an approved de-identified Target CT
-and Slicer Markups JSON here with a short provenance/license file.
+No separate target dataset is included here. To learn the interface, load a CT
+and its matching Markups from `data/reference_v2/` in the complete package.
+Because that animal also belongs to the reference library, this is a workflow
+demonstration, not an independent test of mapping accuracy.
 
-Example Markups should use labels `LM01`-`LM08`. Point ordering is free; three
-non-collinear common labels are the technical minimum and five or more are
-recommended.
+For a new target, use Slicer Markups labels `LM01`–`LM08` for the skull-base set,
+or `LM01`–`LM13` for the total set. Point order does not matter. The app requires
+at least three non-collinear common points; five or more are recommended.

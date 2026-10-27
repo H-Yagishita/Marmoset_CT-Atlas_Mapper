@@ -1,8 +1,8 @@
 cff-version: 1.2.0
-message: "Please cite the version of Marmoset Atlas Mapper used in your research. A Zenodo version DOI will be added after the archive is prepared."
+message: "Please cite the version of Marmoset Atlas Mapper used in your research and its version-specific archive DOI."
 type: software
 title: "Marmoset Atlas Mapper"
-version: 0.3.2
+version: "1.00"
 authors:
   - family-names: Yagishita
     given-names: Haruya
@@ -10,11 +10,11 @@ repository-code: "https://github.com/H-Yagishita/Marmoset_CT-Atlas_Mapper"
 url: "https://github.com/H-Yagishita/Marmoset_CT-Atlas_Mapper"
 license: MIT
 abstract: >-
-  Windows software for CT-to-atlas mapping using six marmoset references,
-  landmark-based or standalone ANTs registration, and equal-weight averaging
-  of point-forward mappings. The MIT License applies to original application
-  source code only. Bundled atlas data, reference data and third-party software
-  retain their separately documented rights and licenses.
+  Marmoset Atlas Mapper maps a marmoset CT image to the Brain/MINDS Marmoset
+  Brain Atlas 2.0 without an MRI of the target animal. It uses landmark-based
+  or ANTs registration to six references and averages the resulting mappings.
+  The application and reference library are distributed under the MIT License.
+  BMA 2.0 and third-party software retain their own licenses.
 keywords:
   - marmoset
   - brain atlas

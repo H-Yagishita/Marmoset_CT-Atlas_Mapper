@@ -1,35 +1,37 @@
-# Runtime data
+# Data sources and licenses
 
-The MIT License for Marmoset Atlas Mapper's software does not apply to the
-datasets, landmark annotations, or derived transforms in this directory.
-Their licensing and redistribution terms are specified separately below.
+The complete package contains the BMA 2.0 atlas and a six-marmoset reference
+library. They have different licenses.
 
-## Brain/MINDS BMA 2.0
+## Brain/MINDS Marmoset Brain Atlas 2.0
 
-The files under `atlas/` are from:
+The files in `atlas/` are from:
 
 > Gong R, et al. The Brain/MINDS 3D Digital Marmoset Brain Atlas Version 2.0.
 > https://doi.org/10.6084/m9.figshare.29992687
 
-License: Creative Commons Attribution 4.0 International (CC BY 4.0)
-https://creativecommons.org/licenses/by/4.0/
+BMA 2.0 is licensed under
+[Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
+(CC BY 4.0). A copy of the license is provided in `licenses/`.
 
-Files are retained with their original filenames and are used for image
-resampling and region lookup. The application does not claim endorsement by
-the Brain/MINDS authors or RIKEN.
+The bundled atlas files retain their original filenames. The app resamples
+them for display and uses the region labels to identify mapped locations.
+Outputs resampled from the atlas should retain the source attribution and
+identify the resampling as a modification. Use of the atlas does not imply
+endorsement by its authors or RIKEN.
 
-## Reference CT/MRI data (version 2.0)
+## Six-marmoset reference library
 
-`reference_v2/` contains HH0312F, HH0424M, HH0428M, HJ0285F, J0476M, and J0477M
-CT/MRI images and Slicer Markups from the 260918 manuscript analysis.
-`transforms_v2/` contains the six validated `*_PointTransform.h5` forward mappings
-to BMA 2.0, derived from the CT-to-MRI and MRI-to-Atlas transforms originating in
-260911. Source hashes and coordinate checks are recorded in
-`reference_v2/PROVENANCE.json`. There is no dependency on the analysis folder. Legacy
-`*_Atlas_ANTs.h5` files remain local and are not distributed with the app.
+The reference CT/MRI images, landmark annotations, and derived transforms are
+distributed under the [MIT License](../LICENSE), as specified by Haruya Yagishita
+for this release. This does not change the license of BMA 2.0 or any third-party
+material used to produce or display the data.
 
-These files are local research data. Redistribution/public-release permission
-must be confirmed by the data owners and responsible institution before this
-repository is made public.
-No public reuse license for these reference data is granted by the software's
-MIT License. Record the approved data license here before releasing them.
+`reference_v2/` contains CT, MRI, and Slicer Markups for HH0312F, HH0424M,
+HH0428M, HJ0285F, J0476M, and J0477M. `transforms_v2/` contains their
+CT-to-atlas point-forward transforms. File provenance and transform checks are
+recorded in `reference_v2/PROVENANCE.json`.
+
+These are the reference images and landmarks used in the manuscript analysis,
+not landmark configurations selected by the earlier optimization experiments.
+The library version is **2.0.0**, independent of the application version **1.00**.

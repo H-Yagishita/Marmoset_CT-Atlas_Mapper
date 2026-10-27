@@ -1,51 +1,49 @@
-# Zenodo complete-package preparation
+# Preparing a release
 
-Status: unpublished preparation for v0.3.2. No DOI has been invented or assigned
-in this source tree. Do not publish the older v0.3.1 draft: it predates the
-Windows Unicode-path fix.
+Use GitHub for source development and Zenodo for the versioned complete package.
+The Windows package includes the executable, corresponding source, BMA 2.0,
+and all six reference datasets. Upload it directly to Zenodo; do not assume
+that GitHub integration includes manually attached release assets.
 
-## Distribution layout
+## Release checks
 
-- GitHub: version-controlled source, issues and tests.
-- Zenodo: one `MarmosetAtlasMapper_v0.3.2_Windows_Complete.zip`, containing the
-  Windows application, exact corresponding source, BMA 2.0, all six reference
-  CT/MRI/landmark sets, and six CT-to-atlas point-forward transforms.
-- Alongside the ZIP: SHA256SUMS.txt, file manifest, validation report and
-  installation/publication instructions.
+1. Update the app version, package filename, citation metadata, and release notes.
+   The public version label is **1.00**. Python packaging may normalize it to
+   `1.0`; the Windows numeric version is `1.0.0.0`.
+2. Run the test suite and Windows CI. Build into a new output folder.
+3. Package the exact source commit with the executable and data. Verify the
+   data against the catalog, then extract the finished ZIP and check every hash.
+4. Test image and transform I/O with Japanese paths, GUI startup, contrast
+   controls, saved results, and the bundled ANTs runtime. Test installation on
+   a clean Windows computer without Python, Slicer, or ANTs.
+5. Confirm contributor details and any institutional or third-party requirements
+   for distributing the reference data. Preserve the MIT, BMA CC BY 4.0, and
+   dependency notices. Review Qt/PySide6 source and library-replacement obligations.
+6. Save the verification results beside the archive. Do not include private
+   paths, credentials, unpublished analysis outputs, or development logs.
 
-The complete ZIP is uploaded directly to a Zenodo draft. Do not assume that
-GitHub integration also archives manually attached executable/data assets.
-GitHub's 2 GiB release-asset limit does not apply to the Zenodo ZIP. Zenodo's
-documented default record quota is 50 GB, which is sufficient for this package.
+## Zenodo deposit
 
-## Before publication
+1. Create a draft record with resource type **Software** and version **1.00**.
+2. Confirm the title, creators, description, keywords, and related identifiers.
+   `CITATION.cff` describes the software author; add other package contributors
+   where appropriate.
+3. Reserve the version DOI if the record does not already have one. A reserved
+   DOI is not registered until the record is published.
+4. Add the DOI to the final citation. If any file inside the ZIP changes,
+   rebuild the package and regenerate its checksums.
+5. Upload the ZIP, file manifest, checksums, and verification report. Check the
+   uploaded size and checksum against the local files.
+6. Review the draft and publish only after the author approves it. A release
+   preparation task does not authorize publication or a repository visibility change.
 
-1. Pass local tests, Windows GitHub Actions, and tests of the extracted executable.
-2. Confirm the six-reference data owners' redistribution approval and license.
-   Software copyright ownership does not establish research-data permissions.
-3. Review the exact bundled dependencies' redistribution obligations, including
-   Qt/PySide6 licenses, corresponding source and library replacement.
-4. Confirm the complete-package creators/contributors, order, affiliations and
-   any ORCIDs; CITATION.cff currently describes the original software author.
-5. Sign in to the intended Zenodo account; create/save a draft, not a public record.
-6. Reserve a DOI in the draft ("No" existing DOI, then "Get a DOI now!").
-   A reserved DOI is not yet registered/publicly resolvable. Keep the draft.
-7. Record the exact version DOI and record URL, update the citation and manuscript,
-   and repackage/re-hash if any bundled file changes. Do not label the mixed
-   package as entirely MIT: retain BMA CC BY 4.0 and all component-specific terms.
-8. Upload the full ZIP and supporting files; verify the server-side size/checksum.
-9. Check installation on a clean Windows PC. Build-host smoke tests are not
-   equivalent to clean-machine certification.
-10. Obtain explicit author approval before publishing the Zenodo record, making
-    GitHub public or publishing a GitHub Release. The present preparation task
-    authorizes none of those public-exposure actions.
+For the manuscript, cite the DOI of the version used, not just the concept DOI.
+Use **New version** for subsequent software releases, retaining the earlier
+version and its source commit.
 
-For the manuscript, cite the DOI of the specific archived version, not only the
-all-versions/concept DOI. For substantive subsequent changes create a new version.
-Preserve the archived ZIP's SHA256 and source commit in the validation manifest.
+## Official guidance
 
-Official references (checked 2026-10-27):
-- https://help.zenodo.org/docs/deposit/manage-files/
-- https://help.zenodo.org/docs/deposit/describe-records/reserve-doi/
-- https://help.zenodo.org/docs/deposit/manage-versions/
-- https://help.zenodo.org/docs/github/describe-software/citation-file/
+- [File uploads](https://help.zenodo.org/docs/deposit/manage-files/)
+- [Reserve a DOI](https://help.zenodo.org/docs/deposit/describe-records/reserve-doi/)
+- [Manage versions](https://help.zenodo.org/docs/deposit/manage-versions/)
+- [Citation metadata](https://help.zenodo.org/docs/github/describe-software/citation-file/)

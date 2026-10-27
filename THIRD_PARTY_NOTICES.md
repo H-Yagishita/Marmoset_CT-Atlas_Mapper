@@ -1,39 +1,54 @@
-# Third-party software and data notices
+# Third-party notices
 
-Marmoset Atlas Mapper uses or interoperates with the following third-party
-components. The original application software is licensed under the MIT License
-(see `LICENSE`; Copyright (c) 2026 Haruya Yagishita). That license does not
-relicense third-party software or data. Their original license terms and
-attribution requirements continue to apply. Reference imaging data, landmarks,
-and derived transforms have separate terms described in `data/README.md`.
+The original Marmoset Atlas Mapper code and six-reference data library are
+distributed under the MIT License. Bundled atlas data and third-party software
+retain their own licenses. The MIT License does not replace those terms.
 
-- Brain/MINDS Marmoset Brain Atlas 2.0 data — CC BY 4.0. Dataset and citation:
-  https://doi.org/10.6084/m9.figshare.29992687
-- Python — Python Software Foundation License.
-- NumPy — BSD-3-Clause.
-- SimpleITK/ITK — Apache License 2.0.
-- Qt for Python (PySide6) — LGPLv3/GPLv3/commercial terms; the distributed app
-  uses the dynamically linked PySide6 runtime included by the packaging tool.
-- PyInstaller — GPLv2-or-later with the exception that permits distribution of
-  bundled applications.
-- ANTs 2.6.5 — Apache License 2.0, Copyright ConsortiumOfANTS. The Windows
-  antsRegistration executable is bundled unmodified from the official ANTsX
-  release. Source: https://github.com/ANTsX/ANTs/tree/v2.6.5.
-  Runtime provenance, binary checksum, and ANTs/ITK license files are in
-  `_internal/ants/Runtime.json` and `_internal/ants/licenses` (source checkout:
-  `runtime/ants`). The license collection includes ITK third-party notices;
-  inclusion of a notice does not imply every optional ITK module is used.
-- Microsoft Visual C++ runtime — external Windows prerequisite. Microsoft
-  system/runtime DLLs are not copied from Slicer or from Windows into the ANTs
-  bundle. Install the official x64 redistributable if the runtime is missing.
+| Component | Version | License or source |
+| --- | --- | --- |
+| Python | 3.12.14 | Python Software Foundation License |
+| NumPy | 2.5.1 | BSD-3-Clause, with additional bundled third-party licenses |
+| SimpleITK / ITK | SimpleITK 2.5.6 | Apache 2.0 and bundled third-party notices |
+| Qt / PySide6 / Shiboken6 | 6.11.1 | LGPLv3 for the included runtime components; additional third-party notices apply |
+| PyInstaller | 6.21.0 | GPLv2-or-later with the bundled-application exception |
+| ANTs | 2.6.5 | Apache 2.0; Copyright ConsortiumOfANTS |
+| BMA 2.0 | 2.0 | CC BY 4.0 |
 
-Neither 3D Slicer nor SlicerANTs is required or bundled in version 0.3.1.
-BRAINSTools/BRAINSFit is no longer an application registration backend.
+License texts supplied with the dependency distributions are included in
+`THIRD_PARTY_LICENSES/`. Qt-related source archives are in `THIRD_PARTY_SOURCES/`.
+The ANTs runtime has its own license and provenance files under
+`_internal/ants/`. BMA attribution is in [data/README.md](data/README.md).
 
-Before a public binary release, retain the license files installed with the
-exact dependency wheels and review this notice against their shipped metadata.
-For Qt/PySide6, verify the licenses of the modules actually distributed, provide
-the required license texts and notices, and fulfill the applicable corresponding
-source and library replacement/relinking requirements. Dynamic linking and this
-summary alone do not establish compliance. See the official Qt guidance:
-https://www.qt.io/development/open-source-lgpl-obligations.
+## Qt and PySide6
+
+This application uses Qt through PySide6. The Qt libraries are dynamically
+loaded from `_internal/PySide6/`; they are not part of the application's MIT code.
+The release includes Qt Core, GUI, Widgets, Network, OpenGL, and SVG components,
+with image-format, platform, and related plugins. The unused Qt Virtual
+Keyboard, PDF, QML, and Quick components are excluded.
+
+You may modify or replace the LGPL-covered libraries and debug the application
+with those replacements, as permitted by their licenses. The application imposes
+no additional restriction on those rights. Matching source archives and
+replacement instructions are described in [QT_RUNTIME.md](docs/QT_RUNTIME.md).
+The license texts, rather than this summary, define the applicable terms.
+
+## ANTs
+
+The bundled `antsRegistration.exe` comes from the
+[official ANTs 2.6.5 release](https://github.com/ANTsX/ANTs/releases/tag/v2.6.5)
+and is not modified. `_internal/ants/Runtime.json` records its source and checksums.
+ANTs and ITK notices are in `_internal/ants/licenses/`. A notice for an optional
+ITK component does not mean that component is used by this application.
+
+Neither 3D Slicer nor SlicerANTs is required or bundled.
+
+## Other runtime components
+
+Microsoft Visual C++ runtime components retain Microsoft's terms. If a required
+runtime is missing, obtain the x64 redistributable from Microsoft. Windows
+system DLLs are not copied into the package.
+
+Dependencies may include code from other projects. Retain their notices when
+redistributing the package. This document is an index to the included licenses,
+not a substitute for them.

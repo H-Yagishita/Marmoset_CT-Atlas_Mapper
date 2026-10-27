@@ -70,9 +70,9 @@ def test_load_import_save_place_clear_and_types(ui):
     w=ui.w
     assert len(w.user_points)==13 and w.register_button.isEnabled()
     assert w.landmark_table.rowCount()==8
-    for kind in ['Landmark (Skull-all)','ANTs registration','Landmark (Skull-base)']:
+    for kind in ['Landmarks (total)','ANTs registration','Landmarks (skull base)']:
         w.registration_type_combo.setCurrentText(kind)
-        assert w.landmark_table.rowCount()==(8 if kind.endswith('(Skull-base)') else 13)
+        assert w.landmark_table.rowCount()==(8 if kind.endswith('(skull base)') else 13)
     for method in ['Similarity','Rigid']: w.method_combo.setCurrentText(method)
     w._select_landmark('LM02')
     w._clear_selected()
@@ -119,7 +119,7 @@ def test_vector_and_4d_inputs_rejected():
 
 
 @pytest.mark.parametrize('method',['Rigid','Similarity'])
-@pytest.mark.parametrize('kind',['Landmark (Skull-base)','Landmark (Skull-all)'])
+@pytest.mark.parametrize('kind',['Landmarks (skull base)','Landmarks (total)'])
 def test_run_all_landmark_modes_restore_and_view(ui,method,kind):
     w=ui.w
     w.registration_type_combo.setCurrentText(kind)
@@ -132,7 +132,7 @@ def test_run_all_landmark_modes_restore_and_view(ui,method,kind):
     assert not ui.errors
     assert w.qc_session is not None
     assert len(w.multi_result.routes)==6
-    assert len(w.multi_result.landmark_subset.labels)==(8 if kind.endswith('(Skull-base)') else 13)
+    assert len(w.multi_result.landmark_subset.labels)==(8 if kind.endswith('(skull base)') else 13)
     w._select_landmark('LM04')
     w.user_panel.views['Axial'].slider.setValue(7)
     w.landmark_visibility_button.click()
@@ -320,6 +320,25 @@ def test_log_can_be_reopened(ui):
     ui.w.log_dock.hide()
     ui.w.log_dock.toggleViewAction().trigger()
     assert not ui.w.log_dock.isHidden()
+
+
+@pytest.mark.parametrize('legacy, expected, rows', [
+    ('Landmark (Skull-base)', 'Landmarks (skull base)', 8),
+    ('Landmark (Skull-all)', 'Landmarks (total)', 13),
+])
+def test_legacy_mode_restored_by_name_even_with_eight_points(ui, legacy, expected, rows):
+    directory = make_result(ui)
+    path = directory / 'Run_Manifest.json'
+    manifest = json.loads(path.read_text())
+    manifest['RegistrationType'] = legacy
+    path.write_text(json.dumps(manifest))
+    session = load_saved_qc_session(directory)
+    assert session.result.registration_type == expected
+    ui.patch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', lambda *a: str(directory))
+    ui.w.open_saved_qc_button.click()
+    assert not ui.errors
+    assert ui.w.registration_type_combo.currentText() == expected
+    assert ui.w.landmark_table.rowCount() == rows
 
 
 def test_unicode_output_bundle_roundtrip(ui):

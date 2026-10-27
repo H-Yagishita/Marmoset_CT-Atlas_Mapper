@@ -401,7 +401,7 @@ class WindowLevelControl(QtWidgets.QWidget):
             slider.setMinimumWidth(100)
             slider.setAccessibleName(name)
             slider.setToolTip(f"Drag to adjust {name.lower()}; use the number field for an exact value.")
-        self.reset_button = QtWidgets.QPushButton("Auto / Reset")
+        self.reset_button = QtWidgets.QPushButton("Reset contrast")
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         for label, slider, spin, kind in (
@@ -648,8 +648,8 @@ class AtlasLayerViewerDialog(QtWidgets.QDialog):
     ) -> None:
         super().__init__(parent)
         if not layers:
-            raise ValueError("No mapped Atlas layers are available in this result.")
-        self.setWindowTitle("Atlas Layer Viewer")
+            raise ValueError("This result has no atlas layers to display.")
+        self.setWindowTitle("Atlas Viewer")
         self.resize(1350, 720)
         # Share image buffers, but keep contrast local to this viewer. In
         # particular, using the same VolumeData for two channels stays safe.
@@ -658,7 +658,7 @@ class AtlasLayerViewerDialog(QtWidgets.QDialog):
         self.index_xyz = base.physical_to_index(tuple(center_lps))
         root = QtWidgets.QVBoxLayout(self)
         row = QtWidgets.QHBoxLayout()
-        row.addWidget(QtWidgets.QLabel("Atlas image layer:"))
+        row.addWidget(QtWidgets.QLabel("Atlas layer:"))
         self.layer_combo = QtWidgets.QComboBox()
         self.layer_combo.addItems(list(self.layers))
         if initial_layer in self.layers:
@@ -763,7 +763,7 @@ class MultiReferenceQualityCheckDialog(QtWidgets.QDialog):
             if not result.qc.passed:
                 messages.append("Forward transform QC failed.")
             if not inverse_generated:
-                messages.append("Atlas-space CT not generated (inverse unavailable).")
+                messages.append("The CT in atlas space was not saved because the inverse transform is unavailable.")
             warning = QtWidgets.QLabel(" ".join(messages))
             warning.setObjectName("qc_output_warning")
             warning.setWordWrap(True)

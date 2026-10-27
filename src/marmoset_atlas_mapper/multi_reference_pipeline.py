@@ -12,7 +12,7 @@ import SimpleITK as sitk
 
 from . import __version__, ants_registration
 from .native_io import read_image, write_image
-from . import __version__
+from .registration_modes import normalize_registration_type
 
 from .displacement_consensus import (
     GridGeometryRAS,
@@ -231,7 +231,7 @@ def _save_outputs(
     for name, image in uncertainty_images.items():
         write_image(image, uncertainty_paths[name], True)
 
-    _notify(progress, "Saving every configured Atlas layer in Target CT geometry (automatic 3B outputs).")
+    _notify(progress, "Saving atlas layers in target CT space.")
     atlas_layer_paths: dict[str, Path] = {}
     for layer in library.atlas_layers:
         layer_image = read_image(layer.path)
@@ -250,7 +250,7 @@ def _save_outputs(
     inverse_paths: dict[str, Path] = {}
     target_in_atlas_path: Path | None = None
     if result.inverse is not None:
-        _notify(progress, "Inverse QC passed; saving robust inverse and automatic 3A Target CT output.")
+        _notify(progress, "Inverse QC passed. Saving the inverse transform and target CT in atlas space.")
         inverse_h5 = inverse_dir / f"BMA_to_Target_CT_{inverse_stem}_Inverse.h5"
         atlas_reference = read_image(library.atlas_reference)
         atlas_qc_points = sample_target_points_lps(
@@ -286,9 +286,9 @@ def _save_outputs(
         del atlas_reference, target_in_atlas, native_mask
         gc.collect()
     else:
-        _notify(progress, "WARNING: automatic 3A output skipped because inverse QC did not pass.")
+        _notify(progress, "WARNING: The CT in atlas space was not saved because inverse QC failed.")
 
-    _notify(progress, "Mapping registration landmarks to BMA 2.0 (automatic 3C output).")
+    _notify(progress, "Mapping registration landmarks to BMA 2.0.")
     mapped_landmarks = {
         label: np.asarray(result.consensus_transform.TransformPoint(tuple(target_points[label])), dtype=float)
         for label in result.landmark_subset.labels
@@ -577,7 +577,7 @@ def _save_outputs(
         "InversePolicy": (
             "Explicit Atlas-grid inverse saved only after convergence-mask and round-trip QC."
             if result.inverse is not None
-            else "Inverse candidate failed QC; no inverse transform or 3A image was saved."
+            else "Inverse QC failed. The inverse transform and CT in atlas space were not saved."
         ),
     }
     write_json(output / "Run_Manifest.json", manifest_json)
@@ -592,14 +592,15 @@ def run_multi_reference_registration(
     library: ReferenceLibrary,
     output_directory: str | Path,
     progress: ProgressCallback | None = None,
-    registration_type: str = "Landmark (Skull-base)",
+    registration_type: str = "Landmarks (skull base)",
     ants_parameters: dict | None = None,
     ants_runtime: ants_registration.ANTsRuntime | None = None,
 ) -> MultiReferenceResult:
     target_path = Path(target_ct_path)
     output = Path(output_directory)
+    registration_type = normalize_registration_type(registration_type)
     is_ants = registration_type == ants_registration.REGISTRATION_TYPE
-    if registration_type not in {"Landmark (Skull-base)", "Landmark (Skull-all)", ants_registration.REGISTRATION_TYPE}:
+    if registration_type not in {"Landmarks (skull base)", "Landmarks (total)", ants_registration.REGISTRATION_TYPE}:
         raise ValueError(f"Unsupported registration type: {registration_type}")
     if is_ants and (len(library.references) != 6 or method.strip().capitalize() not in {"Rigid", "Similarity"}):
         raise ValueError("ANTs registration requires six references and Rigid or Similarity.")
@@ -738,7 +739,7 @@ def run_multi_reference_registration(
             progress,
             f"WARNING: inverse QC FAIL (round-trip P95={inverse_qc.roundtrip.p95_mm:.4f} mm; "
             f"valid samples={inverse_qc.converged_target_samples}, required="
-            f"{inverse_qc.minimum_roundtrip_sample_count}); inverse/3A will not be saved.",
+            f"{inverse_qc.minimum_roundtrip_sample_count}); the inverse transform and CT in atlas space will not be saved.",
         )
     atlas_in_target = resample_atlas_to_target(
         atlas_reference,
@@ -766,6 +767,6 @@ def run_multi_reference_registration(
     _notify(
         progress,
         f"Registration output bundle saved: {output} "
-        f"(3A={'saved' if result.inverse is not None else 'skipped by inverse QC'}, 3B=all layers, 3C=landmarks).",
+        f"(CT in atlas space: {'saved' if result.inverse is not None else 'not saved; inverse QC failed'}).",
     )
     return result

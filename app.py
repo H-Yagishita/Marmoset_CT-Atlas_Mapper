@@ -66,7 +66,7 @@ def gui_smoke_test(report_path: str) -> int:
         assert len(window.reference_library.references) == 6
         assert len(window.reference_points) >= 13
         modes = [window.registration_type_combo.itemText(i) for i in range(window.registration_type_combo.count())]
-        assert modes == ["Landmark (Skull-base)", "Landmark (Skull-all)", "ANTs registration"], modes
+        assert modes == ["Landmarks (skull base)", "Landmarks (total)", "ANTs registration"], modes
         window.registration_type_combo.setCurrentText("ANTs registration")
         assert len(window.registration_labels) == 13
         details["registration_modes"] = modes

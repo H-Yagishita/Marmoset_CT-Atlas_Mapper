@@ -7,14 +7,14 @@ from .paths import application_root
 
 
 class ReferenceDataDialog(QtWidgets.QDialog):
-    """Explain and verify the manually installed data package."""
+    """Check the data library included in the complete package."""
 
     def __init__(self, parent=None, require_complete: bool = True) -> None:
         super().__init__(parent)
         self.catalog = load_data_catalog()
         self.require_complete = require_complete
         self.data_ready = False
-        self.setWindowTitle("Reference Data")
+        self.setWindowTitle("Reference data")
         self.setMinimumWidth(680)
         self.setModal(require_complete)
         self._setup_ui()
@@ -28,10 +28,12 @@ class ReferenceDataDialog(QtWidgets.QDialog):
         layout.addWidget(title)
 
         instructions = QtWidgets.QLabel(
-            f"1. Download <b>{self.catalog.package_filename}</b> using the link in the GitHub README.<br>"
-            "2. Extract the ZIP. The extracted content contains a top-level <b>data</b> folder.<br>"
-            "3. Copy that <b>data</b> folder directly beside MarmosetAtlasMapper.exe.<br>"
-            "4. Return here and click <b>Check again</b>."
+            "The complete package includes the atlas and all six references.<br>"
+            f"If files are missing, extract <b>{self.catalog.package_filename}</b> into a new folder. "
+            "Open MarmosetAtlasMapper.exe from that folder, with <b>data</b> and "
+            "<b>_internal</b> beside it.<br>"
+            "For a source installation, place the package's <b>data</b> folder in the "
+            "source directory. After restoring files, click <b>Check again</b>."
         )
         instructions.setWordWrap(True)
         instructions.setStyleSheet("padding: 10px; background: #edf4ff; color: #14233b;")
@@ -50,7 +52,7 @@ class ReferenceDataDialog(QtWidgets.QDialog):
 
         buttons = QtWidgets.QHBoxLayout()
         if self.catalog.landing_page_url:
-            download_page = QtWidgets.QPushButton("Open data download page")
+            download_page = QtWidgets.QPushButton("Open download page")
             download_page.clicked.connect(
                 lambda: QtGui.QDesktopServices.openUrl(QtCore.QUrl(self.catalog.landing_page_url))
             )

@@ -99,7 +99,7 @@ def workflow_audit(result_directory, report_path):
             with patch.object(QtWidgets.QFileDialog,'getOpenFileName',return_value=(str(export),'')):
                 window.import_button.click()
             details['checks'].append('Save and reimport landmarks')
-            for kind in ['Landmark (Skull-all)','ANTs registration','Landmark (Skull-base)']:
+            for kind in ['Landmarks (total)','ANTs registration','Landmarks (skull base)']:
                 window.registration_type_combo.setCurrentText(kind)
                 for method in ['Similarity','Rigid']: window.method_combo.setCurrentText(method)
             details['checks'].append('registration type/method controls and result invalidation')
