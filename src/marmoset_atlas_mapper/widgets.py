@@ -13,6 +13,12 @@ from .profile import QCBenchmark
 
 ORIENTATIONS = ("Axial", "Coronal", "Sagittal")
 
+
+def atlas_layer_display_name(name: str) -> str:
+    """Keep saved layer identifiers separate from their image labels."""
+    return {"MRI": "MR image", "Atlas MRI": "Atlas MR image"}.get(name, name)
+
+
 # Dataset v2 uses the reoriented manuscript J0476M CT. VolumeData presents its
 # voxels in LPS order. Keep the familiar horizontal/sagittal/coronal panel order,
 # but do not reuse the old dataset's swapped anatomical labels.
@@ -595,6 +601,7 @@ class OverlaySliceView(SliceView):
         rgb = np.zeros((*base_gray.shape, 3), dtype=np.uint8)
         rgb[..., 0] = overlay_gray
         rgb[..., 1] = base_gray
+        rgb[..., 2] = overlay_gray
         self.canvas.set_array(
             rgb,
             plane_pixel_spacing(self.orientation, self.volume.display_image.GetSpacing()),
@@ -614,12 +621,13 @@ class OverlayContrastControl(QtWidgets.QWidget):
         layout = QtWidgets.QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         green_label = QtWidgets.QLabel("Green · Target CT")
-        self.red_label = QtWidgets.QLabel("Red")
+        # Retain internal names used by existing QC automation; the channel is magenta.
+        self.red_label = QtWidgets.QLabel("Magenta")
         self.green_control = WindowLevelControl()
         self.red_control = WindowLevelControl()
         for row, label, control, color in (
             (0, green_label, self.green_control, "#178340"),
-            (1, self.red_label, self.red_control, "#c73535"),
+            (1, self.red_label, self.red_control, "#a21caf"),
         ):
             label.setTextFormat(QtCore.Qt.TextFormat.PlainText)
             label.setStyleSheet(f"color: {color}; font-weight: bold;")
@@ -631,7 +639,7 @@ class OverlayContrastControl(QtWidgets.QWidget):
         self.green_control.set_volume(base)
 
     def set_red_volume(self, name: str, volume: VolumeData) -> None:
-        self.red_label.setText(f"Red · {name}")
+        self.red_label.setText(f"Magenta · {atlas_layer_display_name(name)}")
         self.red_control.set_volume(volume)
 
 
@@ -660,9 +668,10 @@ class AtlasLayerViewerDialog(QtWidgets.QDialog):
         row = QtWidgets.QHBoxLayout()
         row.addWidget(QtWidgets.QLabel("Atlas layer:"))
         self.layer_combo = QtWidgets.QComboBox()
-        self.layer_combo.addItems(list(self.layers))
+        for name in self.layers:
+            self.layer_combo.addItem(atlas_layer_display_name(name), name)
         if initial_layer in self.layers:
-            self.layer_combo.setCurrentText(initial_layer)
+            self.layer_combo.setCurrentIndex(self.layer_combo.findData(initial_layer))
         row.addWidget(self.layer_combo, 1)
         root.addLayout(row)
         self.contrast = OverlayContrastControl(self.base)
@@ -673,9 +682,11 @@ class AtlasLayerViewerDialog(QtWidgets.QDialog):
         buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Close)
         buttons.rejected.connect(self.reject)
         root.addWidget(buttons)
-        self.layer_combo.currentTextChanged.connect(self._set_layer)
+        self.layer_combo.currentIndexChanged.connect(
+            lambda index: self._set_layer(self.layer_combo.itemData(index))
+        )
         self.views: dict[str, OverlaySliceView] = {}
-        self._set_layer(self.layer_combo.currentText())
+        self._set_layer(self.layer_combo.currentData())
         self.contrast.changed.connect(self._refresh_contrast)
 
     def _set_layer(self, name: str) -> None:
@@ -797,7 +808,7 @@ class MultiReferenceQualityCheckDialog(QtWidgets.QDialog):
                 )
                 layout.addWidget(view, 1)
             self.overlay_sets.append(views)
-            self.tabs.addTab(tab, name)
+            self.tabs.addTab(tab, atlas_layer_display_name(name))
         root.addWidget(self.tabs, 1)
         self.tabs.currentChanged.connect(self._select_overlay)
         self.contrast.changed.connect(self._refresh_contrast)
@@ -816,7 +827,7 @@ class MultiReferenceQualityCheckDialog(QtWidgets.QDialog):
 
     def _refresh_contrast(self) -> None:
         # Only redraw the visible tab during slider drags. Other tabs pick up
-        # the shared Green window on activation, with their own Red window.
+        # the shared green window on activation, with their own magenta window.
         index = self.tabs.currentIndex()
         if index >= 0:
             for view in self.overlay_sets[index].values():

@@ -208,6 +208,58 @@ def make_result(ui, name='result', labels=mw.SKULL_BASE_LABELS, **kwargs):
     return output
 
 
+@pytest.mark.parametrize('key, display', [('MRI', 'MR image'), ('Atlas MRI', 'Atlas MR image')])
+def test_saved_mr_layer_identifiers_survive_display_rename(ui, key, display):
+    w = ui.w
+    # Put the MR layer second so restoration cannot pass by selecting the default.
+    library = replace(ui.library, atlas_layers=(
+        ui.library.atlas_layers[1], AtlasLayer(key, ui.ct, 'linear')))
+    w.reference_library = library
+    w._load_profile()
+    assert w.layer_combo.itemText(1) == display
+    assert w.layer_combo.itemData(1).name == key
+    output = make_result(ui, library=library)
+    manifest_path = output / 'Run_Manifest.json'
+    manifest = json.loads(manifest_path.read_text())
+    manifest['Workspace'] = {'AtlasLayer': key}
+    manifest_path.write_text(json.dumps(manifest))
+    existing_outputs = manifest['AutomaticOutputs']
+    existing_qc = manifest['QCViewer']
+    existing_files = sorted(str(path.relative_to(output)) for path in output.rglob('*') if path.is_file())
+    ui.patch.setattr(QtWidgets.QFileDialog, 'getExistingDirectory', lambda *a: str(output))
+    seen = []
+
+    def inspect_qc(dialog):
+        assert dialog.tabs.tabText(0) == 'Atlas MR image'
+        assert dialog.overlays[0][0] == 'Atlas MRI'
+        assert dialog.contrast.red_label.text() == 'Magenta · Atlas MR image'
+        seen.append('qc')
+        return 0
+
+    def inspect_atlas(dialog):
+        assert dialog.layer_combo.currentData() == key
+        assert dialog.layer_combo.currentText() == display
+        assert dialog.contrast.red_label.text() == f'Magenta · {display}'
+        assert key in dialog.layers
+        seen.append('atlas')
+        return 0
+
+    ui.patch.setattr(MultiReferenceQualityCheckDialog, 'exec', inspect_qc)
+    ui.patch.setattr(AtlasLayerViewerDialog, 'exec', inspect_atlas)
+    w.open_saved_qc_button.click()
+    assert w.layer_combo.currentData().name == key
+    assert w.layer_combo.currentText() == display
+    w.qc_button.click()
+    w.atlas_viewer_button.click()
+    assert seen == ['qc', 'atlas'] and not ui.errors
+    w._write_workspace_state()
+    restored = json.loads(manifest_path.read_text())
+    assert restored['Workspace']['AtlasLayer'] == key
+    assert restored['AutomaticOutputs'] == existing_outputs
+    assert restored['QCViewer'] == existing_qc
+    assert sorted(str(path.relative_to(output)) for path in output.rglob('*') if path.is_file()) == existing_files
+
+
 def test_open_second_result_is_atomic_and_does_not_modify_first(ui):
     a=make_result(ui,'A')
     b=make_result(ui,'B')

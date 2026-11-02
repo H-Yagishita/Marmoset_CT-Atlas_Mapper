@@ -46,6 +46,7 @@ from .widgets import (
     MultiReferenceQualityCheckDialog,
     UNLABELED_VIEWS,
     VolumePanel,
+    atlas_layer_display_name,
 )
 
 
@@ -345,7 +346,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.warped_reference = self.warped_references.get(self.profile.reference_id)
         self.layer_combo.clear()
         for layer in self.reference_library.atlas_layers:
-            self.layer_combo.addItem(layer.name, layer)
+            self.layer_combo.addItem(atlas_layer_display_name(layer.name), layer)
         self._select_landmark(self.selected_label)
         self._refresh_landmark_table()
         self.status.showMessage("Loaded J0476M reference")
@@ -473,7 +474,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.user_panel.index_xyz = np.clip(restored_index, 0, np.array(self.user_volume.display_image.GetSize()) - 1)
                     self.user_panel.refresh()
                 self.landmark_visibility_button.setChecked(bool(workspace.get("LandmarksVisible", True)))
-                self.layer_combo.setCurrentText(workspace.get("AtlasLayer", self.layer_combo.itemText(0)))
+                default_layer = self.layer_combo.itemData(0)
+                saved_layer = workspace.get("AtlasLayer", default_layer.name if default_layer else "")
+                for index in range(self.layer_combo.count()):
+                    if self.layer_combo.itemData(index).name == saved_layer:
+                        self.layer_combo.setCurrentIndex(index)
+                        break
                 self.warped_references = session.warped_references
                 self.registration_result = next(
                     (route.registration for route in session.result.routes if route.reference.reference_id == "J0476M"),
@@ -688,7 +694,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "SelectedLandmark": self.selected_label,
             "TargetViewIndexXYZ": self.user_panel.index_xyz.tolist(),
             "LandmarksVisible": self.landmark_visibility_button.isChecked(),
-            "AtlasLayer": self.layer_combo.currentText(),
+            "AtlasLayer": self.layer_combo.currentData().name if self.layer_combo.currentData() else "",
             "TargetLandmarks": {label: np.asarray(point).tolist() for label, point in self.user_points.items()},
             "TargetWindowLevel": {"Window": self.user_volume.window, "Level": self.user_volume.level}
             if self.user_volume is not None else {},
@@ -823,7 +829,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.user_volume,
                 layers,
                 center,
-                self.layer_combo.currentText(),
+                self.layer_combo.currentData().name if self.layer_combo.currentData() else None,
             ).exec()
 
         self._guard(action)

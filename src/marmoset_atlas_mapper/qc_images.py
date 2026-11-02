@@ -95,6 +95,7 @@ def write_overlay_triplet(
         rgb = np.zeros((*base_gray.shape, 3), dtype=np.uint8)
         rgb[..., 0] = overlay_gray
         rgb[..., 1] = base_gray
+        rgb[..., 2] = overlay_gray
         path = output / f"{prefix}_{orientation}.png"
         _write_aspect_correct_png(rgb, _plane_spacing(orientation, base.GetSpacing()), path)
         paths.append(path)

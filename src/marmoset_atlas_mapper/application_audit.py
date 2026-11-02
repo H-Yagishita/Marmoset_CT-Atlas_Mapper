@@ -65,7 +65,7 @@ def workflow_audit(result_directory, report_path):
                 dialog.setAttribute(QtCore.Qt.WidgetAttribute.WA_DontShowOnScreen,True)
                 dialog.show()
                 for name in dialog.layers:
-                    dialog.layer_combo.setCurrentText(name)
+                    dialog.layer_combo.setCurrentIndex(dialog.layer_combo.findData(name))
                     app.processEvents()
                     for view in dialog.views.values():
                         view.slider.setValue(max(view.slider.minimum(),view.slider.value()-1))

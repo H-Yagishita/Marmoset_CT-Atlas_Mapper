@@ -9,9 +9,10 @@ import pytest
 import SimpleITK as sitk
 from PySide6 import QtWidgets
 
-from marmoset_atlas_mapper.imaging import VolumeData
+from marmoset_atlas_mapper.imaging import VolumeData, normalize_to_uint8
 from marmoset_atlas_mapper.widgets import (
     AtlasLayerViewerDialog, MultiReferenceQualityCheckDialog, QualityCheckDialog,
+    OverlayContrastControl, OverlaySliceView, extract_display_plane,
 )
 
 
@@ -66,7 +67,8 @@ def test_channel_changes_refresh_pixels_independently(viewer):
         after = pixels(view)
         np.testing.assert_array_equal(after[..., 0], before[key][..., 0])
         assert np.any(after[..., 1] != before[key][..., 1])
-        assert not np.any(after[..., 2])
+        np.testing.assert_array_equal(after[..., 2], before[key][..., 2])
+        np.testing.assert_array_equal(after[..., 0], after[..., 2])
     green = {key: pixels(view) for key, view in viewer.views().items()}
     control.red_control.window_slider.setValue(2500)
     control.red_control.level_slider.setValue(6000)
@@ -74,6 +76,8 @@ def test_channel_changes_refresh_pixels_independently(viewer):
         after = pixels(view)
         np.testing.assert_array_equal(after[..., 1], green[key][..., 1])
         assert np.any(after[..., 0] != green[key][..., 0])
+        assert np.any(after[..., 2] != green[key][..., 2])
+        np.testing.assert_array_equal(after[..., 0], after[..., 2])
         np.testing.assert_array_equal(view.index_xyz, index)
     assert (original.window_min, original.window_max) == old_window
     np.testing.assert_array_equal(original.array_zyx, old_array)
@@ -109,6 +113,72 @@ def test_no_fre_or_residual_tables_displayed(viewer):
     assert "FRE" not in text and "residual" not in text.lower()
     assert "Yellow = agreement" not in text
     assert not viewer.dialog.findChildren(QtWidgets.QTableWidget)
+
+
+def test_magenta_labels_and_stable_layer_identifiers(viewer):
+    dialog = viewer.dialog
+    if isinstance(dialog, MultiReferenceQualityCheckDialog):
+        assert dialog.overlays[0][0] == "Atlas MRI"
+        assert dialog.tabs.tabText(0) == "Atlas MR image"
+        assert dialog.contrast.red_label.text() == "Magenta · Atlas MR image"
+        viewer.select(1)
+        assert dialog.contrast.red_label.text() == "Magenta · Ref0"
+    else:
+        assert list(dialog.layers) == ["MRI", "Nissl"]
+        assert dialog.layer_combo.currentData() == "MRI"
+        assert dialog.layer_combo.currentText() == "MR image"
+        assert dialog.contrast.red_label.text() == "Magenta · MR image"
+        viewer.select(1)
+        assert dialog.contrast.red_label.text() == "Magenta · Nissl"
+    assert "#a21caf" in dialog.contrast.red_label.styleSheet()
+
+
+@pytest.mark.parametrize("key, label", [("MRI", "MR image"), ("Atlas MRI", "Atlas MR image")])
+def test_legacy_initial_layer_uses_identifier_not_display_label(key, label):
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    v = VolumeData.from_image(sitk.GetImageFromArray(np.arange(27.).reshape(3, 3, 3)))
+    dialog = AtlasLayerViewerDialog(None, v, {"Nissl": v, key: v}, (1, 1, 1), initial_layer=key)
+    assert dialog.layer_combo.currentData() == key
+    assert dialog.layer_combo.currentText() == label
+    assert dialog.contrast.red_label.text() == f"Magenta · {label}"
+    dialog.layer_combo.setCurrentIndex(0)
+    dialog.layer_combo.setCurrentIndex(1)
+    assert dialog.views["Axial"].overlay_volume is dialog.layers[key]
+    dialog.close()
+    dialog.deleteLater()
+    app.processEvents()
+
+
+def test_unbound_contrast_control_has_magenta_label():
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    v = VolumeData.from_image(sitk.GetImageFromArray(np.arange(27.).reshape(3, 3, 3)))
+    control = OverlayContrastControl(v)
+    assert control.red_label.text() == "Magenta"
+    control.deleteLater()
+    app.processEvents()
+
+
+@pytest.mark.parametrize("orientation", ["Axial", "Coronal", "Sagittal"])
+def test_overlay_pixels_are_magenta_green_with_white_overlap(orientation):
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    z, y, x = np.indices((2, 2, 2))
+    base = VolumeData.from_image(sitk.GetImageFromArray(((x + y) % 2).astype(float)))
+    overlay = VolumeData.from_image(sitk.GetImageFromArray(((y + z) % 2).astype(float)))
+    view = OverlaySliceView(orientation, base, overlay)
+    view.set_state(np.zeros(3), {}, "")
+    actual = pixels(view)
+    expected_base = normalize_to_uint8(
+        extract_display_plane(base.array_zyx, orientation, view.index_xyz), base.window_min, base.window_max)
+    expected_overlay = normalize_to_uint8(
+        extract_display_plane(overlay.array_zyx, orientation, view.index_xyz), overlay.window_min, overlay.window_max)
+    np.testing.assert_array_equal(actual[..., 0], expected_overlay)
+    np.testing.assert_array_equal(actual[..., 2], expected_overlay)
+    np.testing.assert_array_equal(actual[..., 1], expected_base)
+    assert set(map(tuple, actual.reshape(-1, 3))) == {
+        (0, 0, 0), (0, 255, 0), (255, 0, 255), (255, 255, 255)}
+    view.close()
+    view.deleteLater()
+    app.processEvents()
 
 
 @pytest.mark.parametrize("forward,inverse", [(False, False), (True, False)])
