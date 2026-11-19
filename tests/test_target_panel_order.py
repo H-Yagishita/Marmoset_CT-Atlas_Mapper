@@ -10,7 +10,7 @@ from PySide6 import QtWidgets
 
 from marmoset_atlas_mapper.imaging import VolumeData
 from marmoset_atlas_mapper.widgets import (
-    J0476M_REFERENCE_VIEWS,
+    REFERENCE_VIEWS,
     ORIENTATIONS,
     UNLABELED_VIEWS,
     VolumePanel,
@@ -44,7 +44,7 @@ def test_target_layout_matches_reference_without_relabeling_other_viewers(target
     panel, _, _ = target_panel
     expected = ["Axial", "Sagittal", "Coronal"]
     assert list(panel.views) == expected
-    assert [view[0] for view in J0476M_REFERENCE_VIEWS] == expected
+    assert [view[0] for view in REFERENCE_VIEWS] == expected
     assert ORIENTATIONS == ("Axial", "Coronal", "Sagittal")
     layout = panel.layout().itemAt(1).layout()
     assert [layout.itemAt(i).widget().orientation for i in range(3)] == expected

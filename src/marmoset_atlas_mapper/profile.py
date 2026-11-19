@@ -16,17 +16,6 @@ class AtlasLayer:
 
 
 @dataclass(frozen=True)
-class QCBenchmark:
-    condition: str
-    sample_count: int
-    mean_rms_mm: float
-    minimum_rms_mm: float
-    maximum_rms_mm: float
-    warning_threshold_mm: float
-    source: str
-
-
-@dataclass(frozen=True)
 class AtlasProfile:
     profile_id: str
     display_name: str
@@ -43,7 +32,6 @@ class AtlasProfile:
     atlas_color_table: Path
     license_name: str
     source_url: str
-    qc_benchmark: QCBenchmark
 
     def missing_files(self) -> list[Path]:
         paths = [
@@ -67,16 +55,6 @@ def _profile_from_dict(data: dict[str, Any], root: Path) -> AtlasProfile:
         AtlasLayer(name=name, path=_resolve(root, item["path"]), interpolation=item["interpolation"])
         for name, item in data["atlas_layers"].items()
     )
-    benchmark_data = data["qc_benchmark"]
-    benchmark = QCBenchmark(
-        condition=benchmark_data["condition"],
-        sample_count=int(benchmark_data["sample_count"]),
-        mean_rms_mm=float(benchmark_data["mean_rms_mm"]),
-        minimum_rms_mm=float(benchmark_data["minimum_rms_mm"]),
-        maximum_rms_mm=float(benchmark_data["maximum_rms_mm"]),
-        warning_threshold_mm=float(benchmark_data["warning_threshold_mm"]),
-        source=benchmark_data["source"],
-    )
     return AtlasProfile(
         profile_id=data["id"],
         display_name=data["display_name"],
@@ -93,7 +71,6 @@ def _profile_from_dict(data: dict[str, Any], root: Path) -> AtlasProfile:
         atlas_color_table=_resolve(root, data["atlas_color_table"]),
         license_name=data["license"],
         source_url=data["source_url"],
-        qc_benchmark=benchmark,
     )
 
 
@@ -105,7 +82,7 @@ def load_profiles(path: Path | None = None) -> list[AtlasProfile]:
         shared = payload["shared"]
         profiles = []
         for reference in payload["references"]:
-            item = {**shared, **reference, "qc_benchmark": payload["qc_benchmark"]}
+            item = {**shared, **reference}
             profiles.append(_profile_from_dict(item, root))
         return profiles
     return [_profile_from_dict(item, root) for item in payload["profiles"]]

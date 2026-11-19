@@ -1,23 +1,23 @@
 # Package contents
 
-The complete Windows package is distributed on Zenodo
-(https://doi.org/10.5281/zenodo.23683937) as a single file,
-`MarmosetAtlasMapper_v1.00_Windows_Complete.zip` (about 4.0 GB; allow about 4.5 GB
-after extraction). No separate data download is needed.
+The complete Windows package is a single ZIP file on Zenodo
+(https://doi.org/10.5281/zenodo.23683937),
+`MarmosetAtlasMapper_v1.00_Windows_Complete.zip`. It is about 4.0 GB and needs
+about 4.5 GB after extraction. No other download is needed.
 
 ```text
 MarmosetAtlasMapper/
 |-- MarmosetAtlasMapper.exe
-|-- _internal/                Python, Qt, and ANTs runtime files
+|-- _internal/                Python, Qt, and ANTs runtime
 |-- data/
 |   |-- atlas/                BMA 2.0
-|   |-- reference_v2/         Reference CT and MR images, landmarks, provenance
+|   |-- reference_v2/         Reference CT and MR images, landmarks
 |   |-- transforms_v2/        Reference CT-to-atlas transforms
-|   |-- licenses/             Atlas and reference-data licenses
+|   |-- licenses/
 |   `-- README.md
 |-- docs/
-|-- source/                   Application source code for this release
-|-- assets/                   Application icon
+|-- source/                   Source code of this release
+|-- assets/
 |-- THIRD_PARTY_LICENSES/
 |-- THIRD_PARTY_SOURCES/      Qt and PySide source archives
 |-- README.md
@@ -26,48 +26,42 @@ MarmosetAtlasMapper/
 |-- CITATION.cff
 |-- LICENSE
 |-- THIRD_PARTY_NOTICES.md
-`-- RELEASE_BUILD.json        Source commit and build record
+`-- RELEASE_BUILD.json        Source commit and build information
 ```
 
-Keep `data/` next to the executable and do not rename its subfolders; the app
-checks at startup that the required files are present. When running from source or
-testing another installation, `MARM_ATLAS_RESOURCE_ROOT` can point to a folder
-that contains `data/`.
+Keep `data/` next to the executable and do not rename its subfolders. To use the
+data from another location, set `MARM_ATLAS_RESOURCE_ROOT` to the folder that
+contains `data/`.
 
 ## Data
 
 - BMA 2.0: in vivo and ex vivo T2-weighted MRI, Nissl, myelin, region labels, and
-  the region color table.
-- CT and MR images and landmarks LM01–LM13 of HH0312F, HH0424M, HH0428M, HJ0285F,
-  J0476M, and J0477M.
-- Six `*_PointTransform.h5` files that map reference CT points into BMA 2.0. Each
-  combines the reference's CT-to-MRI and MRI-to-atlas registrations.
+  the color table.
+- CT and MR images and landmarks LM01–LM13 of the six reference marmosets
+  (HH0312F, HH0424M, HH0428M, HJ0285F, J0476M, J0477M), as used in the paper.
+- One `*_PointTransform.h5` per reference, mapping CT points into BMA 2.0
+  (CT-to-MRI and MRI-to-atlas registrations combined).
 
-These are the reference images and landmarks used in the associated publication.
-`data/reference_v2/PROVENANCE.json` records the input checksums and transform
-checks. Each transform was compared with the original mapping route used in the
-publication: the 95th-percentile coordinate difference was below 0.01 mm and the
-maximum round-trip error was below 0.0014 mm for every reference. These values
-verify the conversion of the transforms; they are not estimates of anatomical
-accuracy.
+The transforms were converted from those used in the paper. After conversion, the
+95th-percentile coordinate difference from the original was below 0.01 mm and the
+round-trip error below 0.0014 mm for every reference. Checksums and these checks
+are recorded in `data/reference_v2/PROVENANCE.json`.
 
-See [data/README.md](../data/README.md) and
-[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for licenses.
+Licenses are described in [data/README.md](../data/README.md) and
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-## Verification
+## Checksums
 
-`FILE_MANIFEST.json` lists every file in the ZIP with its SHA-256 checksum, and
-`SHA256SUMS.txt` gives the checksums of the ZIP and the accompanying files. Both
-files are provided alongside the ZIP on Zenodo. `RELEASE_BUILD.json` in the
-package records the source commit and the version DOI.
+`FILE_MANIFEST.json` (SHA-256 of every file in the ZIP) and `SHA256SUMS.txt`
+(SHA-256 of the ZIP and accompanying files) are on the Zenodo record next to the
+ZIP.
 
-The GitHub repository contains the code and configuration but not the large image
-and transform files, which are distributed only in the complete package on Zenodo.
+The GitHub repository has the code and configuration only; the image and
+transform files are distributed on Zenodo.
 
 ## Transform cache
 
-When the data are on a different drive from the Windows user folder, the app
-verifies the large HDF5 transforms and caches them in
-`%LOCALAPPDATA%\MarmosetAtlasMapper\transform_cache`, because HDF5 files on some
-external or network drives cannot be read reliably. Images are read from the data
-folder without caching.
+If the data are on a different drive from your Windows user folder, the large
+HDF5 transforms are copied to
+`%LOCALAPPDATA%\MarmosetAtlasMapper\transform_cache` before use, because HDF5
+files on some external or network drives cannot be read reliably.

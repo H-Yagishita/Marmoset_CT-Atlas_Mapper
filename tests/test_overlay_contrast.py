@@ -11,7 +11,7 @@ from PySide6 import QtWidgets
 
 from marmoset_atlas_mapper.imaging import VolumeData, normalize_to_uint8
 from marmoset_atlas_mapper.widgets import (
-    AtlasLayerViewerDialog, MultiReferenceQualityCheckDialog, QualityCheckDialog,
+    AtlasLayerViewerDialog, MultiReferenceQualityCheckDialog,
     OverlayContrastControl, OverlaySliceView, extract_display_plane,
 )
 
@@ -190,17 +190,6 @@ def test_qc_failures_remain_visible(forward, inverse):
     assert "Inverse QC: FAIL" in dialog.summary.text()
     warning = dialog.findChild(QtWidgets.QLabel, "qc_output_warning")
     assert warning is not None and "was not saved" in warning.text()
-    dialog.close()
-    dialog.deleteLater()
-    app.processEvents()
-
-
-def test_legacy_qc_uses_the_same_contrast_controls():
-    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-    v = VolumeData.from_image(sitk.GetImageFromArray(np.arange(125.).reshape(5, 5, 5)))
-    dialog = QualityCheckDialog(None, v, v, result(), (2, 2, 2), "Ref", None)
-    assert len(dialog.overlay_views) == 3
-    assert dialog.contrast.green_control.volume is not dialog.contrast.red_control.volume
     dialog.close()
     dialog.deleteLater()
     app.processEvents()
