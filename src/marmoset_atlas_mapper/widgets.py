@@ -8,7 +8,6 @@ import SimpleITK as sitk
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .imaging import VolumeData, normalize_to_uint8
-from .profile import QCBenchmark
 
 
 ORIENTATIONS = ("Axial", "Coronal", "Sagittal")
@@ -96,19 +95,6 @@ def plane_pixel_spacing(
     if orientation == "Sagittal":
         return spacing_y, spacing_z
     raise ValueError(f"Unsupported orientation: {orientation}")
-
-
-def qc_benchmark_state(
-    fre_rms_mm: float,
-    method: str,
-    landmark_count: int,
-    benchmark: QCBenchmark,
-) -> str:
-    if fre_rms_mm > benchmark.warning_threshold_mm:
-        return "warning"
-    if method == "Rigid" and landmark_count == 8:
-        return "within_reference_range"
-    return "context_only"
 
 
 class ImageCanvas(QtWidgets.QWidget):
@@ -715,24 +701,6 @@ class AtlasLayerViewerDialog(QtWidgets.QDialog):
         self.index_xyz[axis] = value
         for view in self.views.values():
             view.set_state(self.index_xyz, {}, "")
-
-
-class QualityCheckDialog(AtlasLayerViewerDialog):
-    """Single-reference viewer retained for older callers."""
-
-    def __init__(
-        self,
-        parent: QtWidgets.QWidget,
-        base: VolumeData,
-        warped_reference: VolumeData,
-        result,
-        center_lps: Iterable[float],
-        reference_id: str,
-        benchmark: QCBenchmark,
-    ) -> None:
-        super().__init__(parent, base, {reference_id: warped_reference}, center_lps)
-        self.setWindowTitle(f"{result.method} — Quality Check")
-        self.overlay_views = self.views
 
 
 class MultiReferenceQualityCheckDialog(QtWidgets.QDialog):

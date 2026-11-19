@@ -30,7 +30,7 @@ from .image_resampling import (
 )
 from .imaging import read_color_table, resample_reference_into_user, sample_label
 from .io_manifest import scalar_image_summary, sha256_file, write_csv, write_json, write_transform_checked, prepare_output_directory
-from .landmark_registration import RegistrationResult, register_landmarks
+from .registration import RegistrationResult, register_landmarks
 from .landmark_validation import LandmarkSubset, select_common_landmarks
 from .landmarks import load_slicer_markups, write_landmark_csv, write_slicer_markups
 from .reference_library import ReferenceEntry, ReferenceLibrary

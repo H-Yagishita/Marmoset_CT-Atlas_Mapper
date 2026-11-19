@@ -82,12 +82,6 @@ class VolumeData:
     def physical_to_index(self, point_lps: Iterable[float]) -> np.ndarray:
         return np.asarray(self.display_image.TransformPhysicalPointToContinuousIndex(tuple(point_lps)), dtype=float)
 
-    def contains_index(self, index_xyz: Iterable[float]) -> bool:
-        index = np.asarray(tuple(index_xyz), dtype=float)
-        size = np.asarray(self.display_image.GetSize(), dtype=float)
-        return bool(np.all(index >= -0.5) and np.all(index <= size - 0.5))
-
-
 def normalize_to_uint8(array: np.ndarray, low: float, high: float) -> np.ndarray:
     scaled = (np.asarray(array, dtype=np.float32) - low) / max(high - low, 1e-12)
     return np.ascontiguousarray(np.clip(scaled * 255.0, 0.0, 255.0).astype(np.uint8))

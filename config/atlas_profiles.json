@@ -45,15 +45,6 @@
     "license": "CC BY 4.0",
     "source_url": "https://doi.org/10.6084/m9.figshare.29992687"
   },
-  "qc_benchmark": {
-    "condition": "260805 CT-to-CT, Bottom_08, Rigid, 8 landmarks, 12 directed pairs",
-    "sample_count": 12,
-    "mean_rms_mm": 0.615606480993263,
-    "minimum_rms_mm": 0.462723337809842,
-    "maximum_rms_mm": 0.736546216817878,
-    "warning_threshold_mm": 0.736546216817878,
-    "source": "04_MappingEvaluation/CT_to_CT_LandmarkTransforms/All_CTtoCT_LandmarkTransforms_Summary.csv"
-  },
   "references": [
     {
       "id": "bma2_hh0312f",
