@@ -44,8 +44,7 @@ that GitHub integration includes manually attached release assets.
    retains the actual status until publication.
 5. Upload the ZIP, file manifest, checksums, and verification report. Check the
    uploaded size and checksum against the local files.
-6. Review the draft and publish only after the author approves it. A release
-   preparation task does not authorize publication or a repository visibility change.
+6. Review the draft and publish only after all authors approve it.
 
 For the manuscript, cite the DOI of the version used, not just the concept DOI.
 Use **New version** for subsequent software releases, retaining the earlier
