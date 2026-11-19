@@ -18,16 +18,16 @@ def atlas_layer_display_name(name: str) -> str:
     return {"MRI": "MR image", "Atlas MRI": "Atlas MR image"}.get(name, name)
 
 
-# Dataset v2 uses the reoriented manuscript J0476M CT. VolumeData presents its
-# voxels in LPS order. Keep the familiar horizontal/sagittal/coronal panel order,
-# but do not reuse the old dataset's swapped anatomical labels.
-J0476M_REFERENCE_VIEWS = (
+# Reference CTs are shown in LPS voxel order. The six dataset v2 references are
+# aligned with each other to within 8 degrees (rigid fit of LM01-LM13), so the
+# same anatomical labels apply to whichever one is used as the guide image.
+REFERENCE_VIEWS = (
     ("Axial", "Horizontal (Axial)", {"left": "R", "right": "L", "top": "A", "bottom": "P"}),
     ("Sagittal", "Sagittal", {"left": "A", "right": "P", "top": "D", "bottom": "V"}),
     ("Coronal", "Coronal", {"left": "R", "right": "L", "top": "D", "bottom": "V"}),
 )
 # Match the reference panel order without assigning anatomical labels to the target.
-UNLABELED_VIEWS = tuple((orientation, "", {}) for orientation, _, _ in J0476M_REFERENCE_VIEWS)
+UNLABELED_VIEWS = tuple((orientation, "", {}) for orientation, _, _ in REFERENCE_VIEWS)
 
 
 def extract_display_plane(

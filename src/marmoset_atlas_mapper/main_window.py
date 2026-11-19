@@ -42,7 +42,7 @@ from .saved_qc import load_saved_qc_session
 from .transform_io import read_transform
 from .widgets import (
     AtlasLayerViewerDialog,
-    J0476M_REFERENCE_VIEWS,
+    REFERENCE_VIEWS,
     MultiReferenceQualityCheckDialog,
     UNLABELED_VIEWS,
     VolumePanel,
@@ -52,17 +52,25 @@ from .widgets import (
 
 SKULL_BASE_LABELS = tuple(f"LM{index:02d}" for index in range(1, 9))
 SKULL_ALL_LABELS = tuple(f"LM{index:02d}" for index in range(1, 14))
+DEFAULT_GUIDE_REFERENCE = "J0476M"
+GUIDE_REFERENCE_SETTING = "GuideReference"
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self) -> None:
+    def __init__(self, settings: QtCore.QSettings | None = None) -> None:
         super().__init__()
         self.setWindowTitle(f"Marmoset Atlas Mapper {__version__}")
         self.resize(1650, 930)
+        # The guide reference is a viewer preference; it does not change the
+        # registration, which always uses all references with equal weight.
+        self.settings = settings
         self.profiles = load_profiles()
         self.reference_library = load_reference_library()
-        self.profile: AtlasProfile = next(
-            profile for profile in self.profiles if profile.reference_id == "J0476M"
+        saved_guide = settings.value(GUIDE_REFERENCE_SETTING, DEFAULT_GUIDE_REFERENCE) if settings else ""
+        self.profile: AtlasProfile = (
+            self._find_profile(str(saved_guide))
+            or self._find_profile(DEFAULT_GUIDE_REFERENCE)
+            or self.profiles[0]
         )
         self.reference_volume: VolumeData | None = None
         self.user_volume: VolumeData | None = None
@@ -92,7 +100,8 @@ class MainWindow(QtWidgets.QMainWindow):
         root = QtWidgets.QVBoxLayout(central)
 
         toolbar = QtWidgets.QHBoxLayout()
-        toolbar.addWidget(QtWidgets.QLabel(f"Preview: <b>J0476M</b> | <b>Nref = {len(self.reference_library.references)}</b>"))
+        self.guide_label = QtWidgets.QLabel()
+        toolbar.addWidget(self.guide_label)
         toolbar.addSpacing(18)
         self.load_ct_button = QtWidgets.QPushButton("Load CT")
         self.load_ct_button.clicked.connect(self._load_user_ct)
@@ -124,7 +133,7 @@ class MainWindow(QtWidgets.QMainWindow):
         root.addLayout(toolbar)
 
         self.reference_panel = VolumePanel(
-            "Reference CT: J0476M", interactive=False, view_specs=J0476M_REFERENCE_VIEWS
+            f"{self.profile.reference_id} Reference CT", interactive=False, view_specs=REFERENCE_VIEWS
         )
         self.user_panel = VolumePanel(
             "Target CT",
@@ -165,6 +174,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.log_dock.setMinimumHeight(115)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, self.log_dock)
         self.menuBar().addMenu("View").addAction(self.log_dock.toggleViewAction())
+        settings_menu = self.menuBar().addMenu("Settings")
+        self.guide_menu = settings_menu.addMenu("Guide reference")
+        self.guide_menu.setToolTipsVisible(True)
+        self.guide_actions = QtGui.QActionGroup(self)
+        self.guide_actions.setExclusive(True)
+        for profile in self.profiles:
+            action = self.guide_menu.addAction(profile.reference_id)
+            action.setToolTip("Show this reference CT and its landmarks in the upper panel.")
+            action.setCheckable(True)
+            action.setData(profile.reference_id)
+            action.setChecked(profile.reference_id == self.profile.reference_id)
+            self.guide_actions.addAction(action)
+        self.guide_actions.triggered.connect(lambda action: self.set_guide_reference(action.data()))
+        self._update_guide_label()
         self.log_dock.hide()
         self.layer_combo.currentTextChanged.connect(self._schedule_workspace_save)
         self._log("Application started.")
@@ -334,23 +357,69 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reference_panel.setTitle(f"{self.profile.reference_id} Reference CT")
         self.reference_panel.set_volume(self.reference_volume)
         self.reference_panel.set_points(
-            {label: self.reference_points[label] for label in self.registration_labels}, self.selected_label
+            {label: self.reference_points[label] for label in self.registration_labels if label in self.reference_points},
+            self.selected_label,
         )
-        if self.multi_result is not None:
-            preview_route = next(
-                route
-                for route in self.multi_result.routes
-                if route.reference.reference_id == self.profile.reference_id
-            )
-            self.registration_result = preview_route.registration
-            self.warped_reference = self.warped_references.get(self.profile.reference_id)
+        self._update_preview_route()
+        current_layer = self.layer_combo.currentData()
         self.layer_combo.clear()
         for layer in self.reference_library.atlas_layers:
             self.layer_combo.addItem(atlas_layer_display_name(layer.name), layer)
+            if current_layer is not None and layer.name == current_layer.name:
+                self.layer_combo.setCurrentIndex(self.layer_combo.count() - 1)
         self._select_landmark(self.selected_label)
         self._refresh_landmark_table()
-        self.status.showMessage("Loaded J0476M reference")
-        self._log("Loaded fixed J0476M reference.")
+        self._update_guide_label()
+        self.status.showMessage(f"Loaded guide reference {self.profile.reference_id}")
+        self._log(f"Loaded guide reference {self.profile.reference_id}.")
+
+    def _find_profile(self, reference_id: str) -> AtlasProfile | None:
+        return next((profile for profile in self.profiles if profile.reference_id == reference_id), None)
+
+    def _update_guide_label(self) -> None:
+        self.guide_label.setText(
+            f"Guide: <b>{self.profile.reference_id}</b> | <b>Nref = {len(self.reference_library.references)}</b>"
+        )
+
+    def _update_preview_route(self) -> None:
+        """Point the single-reference preview at the current guide, if results exist."""
+        result = self.multi_result or (self.qc_session.result if self.qc_session is not None else None)
+        if result is None:
+            return
+        routes = list(result.routes)
+        route = next(
+            (item for item in routes if item.reference.reference_id == self.profile.reference_id),
+            routes[0] if routes else None,
+        )
+        self.registration_result = route.registration if route is not None else None
+        self.warped_reference = self.warped_references.get(self.profile.reference_id)
+
+    def set_guide_reference(self, reference_id: str) -> None:
+        """Show another reference CT and its landmarks as the guide image."""
+        profile = self._find_profile(str(reference_id))
+        if profile is None:
+            raise ValueError(f"Unknown reference: {reference_id}")
+        if self._busy or profile.reference_id == self.profile.reference_id:
+            self._sync_guide_actions()
+            return
+        previous = self.profile
+
+        def action() -> None:
+            self.profile = profile
+            try:
+                self._load_profile()
+            except Exception:
+                self.profile = previous
+                raise
+            if self.settings is not None:
+                self.settings.setValue(GUIDE_REFERENCE_SETTING, profile.reference_id)
+
+        self._guard(action, busy=True)
+        self._sync_guide_actions()
+
+    def _sync_guide_actions(self) -> None:
+        for item in self.guide_actions.actions():
+            item.setChecked(item.data() == self.profile.reference_id)
 
     def _load_user_ct(self) -> None:
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -481,11 +550,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.layer_combo.setCurrentIndex(index)
                         break
                 self.warped_references = session.warped_references
-                self.registration_result = next(
-                    (route.registration for route in session.result.routes if route.reference.reference_id == "J0476M"),
-                    session.result.routes[0].registration if session.result.routes else None)
-                self.warped_reference = self.warped_references.get("J0476M")
                 self.qc_session = session
+                self._update_preview_route()
                 self.current_output_directory = Path(directory).resolve()
                 self.user_to_atlas = forward
                 self.qc_button.setEnabled(True)
@@ -638,13 +704,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         warped,
                         f"{route.reference.reference_id}_in_TargetCT",
                     )
-                preview_route = next(
-                    route
-                    for route in self.multi_result.routes
-                    if route.reference.reference_id == self.profile.reference_id
-                )
-                self.registration_result = preview_route.registration
-                self.warped_reference = self.warped_references[self.profile.reference_id]
+                self._update_preview_route()
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
 
@@ -862,7 +922,7 @@ def run() -> int:
     app.setPalette(palette)
     if not ensure_reference_data():
         return 0
-    window = MainWindow()
+    window = MainWindow(QtCore.QSettings())
     if not app.windowIcon().isNull():
         window.setWindowIcon(app.windowIcon())
     window.show()

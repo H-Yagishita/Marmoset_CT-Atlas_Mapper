@@ -41,8 +41,9 @@ matched by label, not by their order in the file. The skull-base and total sets
 are the Bottom and Total sets in the paper.
 
 The references are HH0312F, HH0424M, HH0428M, HJ0285F, J0476M, and J0477M, and
-all six are weighted equally. J0476M is shown as the guide image for landmark
-placement.
+all six are weighted equally. The guide image for landmark placement is J0476M by
+default; to use another reference, choose it in **Settings → Guide reference**.
+This only changes the display, not the registration.
 
 The quality checks in the app confirm that the transforms are numerically
 consistent; they do not tell you whether the mapping is anatomically correct.
