@@ -26,12 +26,12 @@ creators or RIKEN.
 - `reference_v2/`: CT and MR images and landmarks (3D Slicer Markups, LM01–LM13)
   of HH0312F, HH0424M, HH0428M, HJ0285F, J0476M, and J0477M.
 - `transforms_v2/`: the CT-to-atlas transform of each reference, combining its
-  CT-to-MRI and MRI-to-atlas registrations.
+  CT-to-MR and MR-to-atlas registrations.
 - `reference_v2/PROVENANCE.json`: input checksums and transform checks.
 
 These are the reference images and landmarks used in Yagishita et al. (2026;
-https://doi.org/10.1101/TODO_BIORXIV_DOI), which describes their acquisition and
-processing. The library is licensed under
+https://doi.org/10.64898/2026.11.18.767736), which describes their acquisition
+and processing. The library is licensed under
 [Creative Commons Attribution 4.0
 International](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0); see
 `licenses/ReferenceLibrary-CC-BY-4.0.txt`. When reusing these data, credit the

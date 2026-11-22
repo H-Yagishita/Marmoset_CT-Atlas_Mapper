@@ -38,7 +38,7 @@ Redistributable
 Each type can use a rigid or a similarity (rigid + uniform scale) transform. At
 least three landmarks are needed, and we recommend five or more. Landmarks are
 matched by label, not by their order in the file. The skull-base and total sets
-are the Bottom and Total sets in the paper.
+are the Lower and Total sets in the paper.
 
 The references are HH0312F, HH0424M, HH0428M, HJ0285F, J0476M, and J0477M, and
 all six are weighted equally. The guide image for landmark placement is J0476M by
@@ -91,9 +91,9 @@ bundled third-party software keeps its own licenses (see
 If you use this software, please cite:
 
 1. Yagishita H, Kawabata M, Nagai Y, Hori Y, Hirayama Y, Ebina T, Sehara K,
-   Oyama K, Matsuzaki M, Minamimoto T, Isomura Y. A CT-to-atlas mapping
-   framework using skull-base landmarks in marmosets. *bioRxiv* (2026).
-   https://doi.org/10.1101/TODO_BIORXIV_DOI
+   Oyama K, Matsuzaki M, Minamimoto T, Isomura Y. A CT-to-brain-atlas mapping
+   framework using cranial base landmarks in marmosets. *bioRxiv* (2026).
+   https://doi.org/10.64898/2026.11.18.767736
 2. Yagishita H. Marmoset Atlas Mapper (version 1.00). Zenodo (2026).
    https://doi.org/10.5281/zenodo.23683937
 

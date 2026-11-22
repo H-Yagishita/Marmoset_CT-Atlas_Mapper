@@ -36,6 +36,16 @@ def test_consistent_documents_pass(documents):
     assert check.validate(*documents)['status'] == 'Passed'
 
 
+@pytest.mark.parametrize('text', [
+    'Yagishita et al. (2026;\nhttps://doi.org/' + PAPER_DOI + '), which describes',
+    'See https://doi.org/' + PAPER_DOI + '.',
+])
+def test_doi_followed_by_punctuation_passes(documents, text):
+    root, prep = documents
+    (root / 'data/README.md').write_text(text, encoding='utf-8')
+    assert check.validate(root, prep)['status'] == 'Passed'
+
+
 @pytest.mark.parametrize('name', [*check.PAPER_DOCS, 'Zenodo_record_draft.json'])
 def test_placeholder_blocks_each_of_five_files(documents, name):
     root, prep = documents

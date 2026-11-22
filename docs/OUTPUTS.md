@@ -10,7 +10,7 @@ timestamped subfolder is created. Input CT and landmark files are never modified
 | `SingleReference/` | Target-to-atlas transform through each reference |
 | `TargetCT_in_Reference/` | Target CT resampled into each reference CT, with coverage masks |
 | `UsedLandmarks/` | Landmarks used for the target and each reference |
-| `AtlasLayers_in_TargetCT/` | Atlas MRI, Nissl, myelin, and region labels in target CT space |
+| `AtlasLayers_in_TargetCT/` | Atlas MR image, Nissl, myelin, and region labels in target CT space |
 | `TargetCT_in_BMA2.0.nii.gz` | Target CT in atlas space (only if the inverse check passes) |
 | `Inverse/` | Inverse transform, displacement field, and convergence mask |
 | `MappedMarkups/` | Landmarks mapped to atlas space (Markups JSON and CSV) |
