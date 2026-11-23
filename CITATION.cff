@@ -23,7 +23,7 @@ keywords:
   - image registration
 references:
   - type: article
-    title: "A CT-to-atlas mapping framework using skull-base landmarks in marmosets"
+    title: "A CT-to-brain-atlas mapping framework using cranial base landmarks in marmosets"
     authors:
       - family-names: Yagishita
         given-names: Haruya
@@ -49,4 +49,4 @@ references:
         given-names: Yoshikazu
     journal: "bioRxiv"
     year: 2026
-    doi: "10.1101/TODO_BIORXIV_DOI"
+    doi: "10.64898/2026.11.18.767736"

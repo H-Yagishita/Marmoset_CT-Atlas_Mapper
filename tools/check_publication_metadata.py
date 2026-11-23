@@ -25,6 +25,17 @@ PLACEHOLDER = re.compile(r'TODO_[A-Z0-9_]+|\[rights holders\]|YYYY-MM-DD')
 DOI = re.compile(r'10\.\d{4,9}/[-._;()/:A-Za-z0-9]+')
 
 
+def found_dois(text):
+    """DOIs in running text, without trailing punctuation or an unmatched ')'."""
+    found = set()
+    for doi in DOI.findall(text):
+        doi = doi.rstrip('.,;:')
+        while doi.endswith(')') and doi.count(')') > doi.count('('):
+            doi = doi[:-1].rstrip('.,;:')
+        found.add(doi)
+    return found
+
+
 def citation_keywords(text):
     """Read the plain string keyword list used in this project's CFF file."""
     section = re.search(r'^keywords:\s*\n(.*?)(?=^\S|\Z)', text, re.M | re.S)
@@ -79,7 +90,7 @@ def validate(workspace, preparation):
     else:
         for name in PAPER_DOCS:
             content = documents.get(name, '')
-            if paper_doi not in set(DOI.findall(content)):
+            if paper_doi not in found_dois(content):
                 errors.append({'file': name, 'message': 'The preprint DOI is missing or differs from the Zenodo draft.'})
         references = re.search(r'^references:\s*\n(.*)', cff, re.M | re.S)
         reference_dois = re.findall(r'^    doi:\s*[\"\']?([^\s\"\']+)',

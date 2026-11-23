@@ -35,12 +35,12 @@ contains `data/`.
 
 ## Data
 
-- BMA 2.0: in vivo and ex vivo T2-weighted MRI, Nissl, myelin, region labels, and
-  the color table.
+- BMA 2.0: in vivo and ex vivo T2-weighted MR images, Nissl, myelin, region
+  labels, and the color table.
 - CT and MR images and landmarks LM01–LM13 of the six reference marmosets
   (HH0312F, HH0424M, HH0428M, HJ0285F, J0476M, J0477M), as used in the paper.
 - One `*_PointTransform.h5` per reference, mapping CT points into BMA 2.0
-  (CT-to-MRI and MRI-to-atlas registrations combined).
+  (CT-to-MR and MR-to-atlas registrations combined).
 
 The transforms were converted from those used in the paper. After conversion, the
 95th-percentile coordinate difference from the original was below 0.01 mm and the
